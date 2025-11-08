@@ -1,10 +1,19 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from models.product import Product
 from database import product_collection
 from bson import ObjectId
 from slugify import slugify
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def product_helper(product) -> dict:
@@ -55,6 +64,30 @@ async def create_products(product: Product):
     product_dict["slug"] = slug
 
     result = await product_collection.insert_one(product_dict)
-    new_product = await product_collection.find_one({"id": result.inserted_id})
+    new_product = await product_collection.find_one({"_id": result.inserted_id})
 
     return product_helper(new_product)
+
+
+@app.put("/products/{slug}")
+async def update_product(slug: str, product: Product):
+    existing_product = await product_collection.find_one({"slug": slug})
+    if not existing_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    update_data = product.dict(exclude_unset=True)
+    if "name" in update_data:
+        update_data["slug"] = slugify(update_data["name"])
+    await product_collection.update_one({"slug": slug}, {"$set": update_data})
+
+    updated_product = await product_collection.find_one(
+        {"slug": update_data.get("slug", slug)}
+    )
+    return product_helper(updated_product)
+
+
+@app.delete("/products/{slug}")
+async def delete_product(slug: str):
+    delete_result = await product_collection.delete_one({"slug": slug})
+    if delete_result.deleted_count == 1:
+        return {"message": "Product deleted successfully"}
+    raise HTTPException(status_code=404, detail="Product not found")

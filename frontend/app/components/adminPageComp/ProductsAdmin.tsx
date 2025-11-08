@@ -7,6 +7,8 @@ import TrashIcon from "@/app/icons/TrashIcon";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 
+// (AddProductModal and ProductFormData interface remain the same)
+
 interface ProductFormData {
   name: string;
   slug: string;
@@ -46,14 +48,36 @@ const AddProductModal: React.FC<{
   });
 
   const [newDetail, setNewDetail] = useState("");
-  const [newSizeGuide, setNewSizeGuide] = useState({ size: "", chest: "", length: "" });
+  const [newSizeGuide, setNewSizeGuide] = useState({
+    size: "",
+    chest: "",
+    length: "",
+  });
   const [newGalleryImage, setNewGalleryImage] = useState("");
 
   useEffect(() => {
-    if (product) {
+    // Reset form data when the modal is opened for a new product or an edit
+    if (!product) {
       setFormData({
+        name: "",
+        slug: "",
+        tagline: "",
+        price: 0,
+        description: "",
+        category: "Tees",
+        stock: 0,
+        newest: false,
+        bestseller: false,
+        imageUrl: "",
+        galleryImages: [],
+        details: [],
+        sizeGuide: [],
+      });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
         name: product.name,
-        slug: product.slug,
+        slug: product.slug || "",
         tagline: product.tagline,
         price: product.price,
         description: product.description,
@@ -62,38 +86,64 @@ const AddProductModal: React.FC<{
         newest: product.newest || false,
         bestseller: product.bestseller || false,
         imageUrl: product.imageUrl,
-        galleryImages: product.galleryImages,
-        details: product.details,
-        sizeGuide: product.sizeGuide,
-      });
+        galleryImages: product.galleryImages || [],
+        details: product.details || [],
+        sizeGuide: product.sizeGuide || [],
+      }));
     }
-  }, [product]);
+    // Also reset auxiliary inputs when the modal state changes
+    setNewDetail("");
+    setNewSizeGuide({ size: "", chest: "", length: "" });
+    setNewGalleryImage("");
+  }, [product, isOpen]); // Added isOpen to re-trigger on open
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const productData: Product = {
-      id: product?.id || Date.now(),
+      // **CRUCIAL CHANGE:** Ensure ID is included for updates, and explicitly can be undefined for new products
+      id: product?.id,
       ...formData,
       slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
-    };
+      // Type casting necessary since we manually construct a Product, assuming all keys are present
+    } as Product;
     onSave(productData);
     onClose();
-    // Reset form
-    setFormData({
-      name: "",
-      slug: "",
-      tagline: "",
-      price: 0,
-      description: "",
-      category: "Tees",
-      stock: 0,
-      newest: false,
-      bestseller: false,
-      imageUrl: "",
-      galleryImages: [],
-      details: [],
-      sizeGuide: [],
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    const isNumber = name === "price" || name === "stock";
+
+    setFormData((prev) => {
+      const updatedFormData = {
+        ...prev,
+        [name]: isNumber ? parseFloat(value) || parseInt(value) || 0 : value,
+      };
+
+      // Auto-generate slug if not manually set
+      if (name === "name" && !product && !prev.slug) {
+        updatedFormData.slug = value
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+      } else if (name === "name" && product && product.id && !prev.slug) {
+        // Auto-generate slug on name change for editing if slug was not manually changed
+        updatedFormData.slug = value
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+      }
+      return updatedFormData;
     });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData({ ...formData, [name]: checked });
   };
 
   const addDetail = () => {
@@ -170,45 +220,39 @@ const AddProductModal: React.FC<{
               </label>
               <input
                 type="text"
+                name="name"
                 value={formData.name}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (!product) {
-                    setFormData({
-                      ...formData,
-                      name: e.target.value,
-                      slug: e.target.value.toLowerCase().replace(/\s+/g, "-"),
-                    });
-                  }
-                }}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               />
             </div>
-          <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Slug *
-            </label>
-            <input
-              type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-            />
-          </div>
-          <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tagline *
-            </label>
+              </label>
               <input
                 type="text"
-                value={formData.tagline}
-                onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                name="slug"
+                value={formData.slug}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               />
-          </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Tagline *
+              </label>
+              <input
+                type="text"
+                name="tagline"
+                value={formData.tagline}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Price ($) *
@@ -216,8 +260,9 @@ const AddProductModal: React.FC<{
               <input
                 type="number"
                 step="0.01"
+                name="price"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               />
@@ -227,8 +272,9 @@ const AddProductModal: React.FC<{
                 Category *
               </label>
               <select
+                name="category"
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
@@ -244,8 +290,9 @@ const AddProductModal: React.FC<{
               </label>
               <input
                 type="number"
+                name="stock"
                 value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
@@ -256,20 +303,26 @@ const AddProductModal: React.FC<{
             <label className="flex items-center">
               <input
                 type="checkbox"
+                name="newest"
                 checked={formData.newest}
-                onChange={(e) => setFormData({ ...formData, newest: e.target.checked })}
+                onChange={handleCheckboxChange}
                 className="mr-2"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Newest</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Newest
+              </span>
             </label>
             <label className="flex items-center">
               <input
                 type="checkbox"
+                name="bestseller"
                 checked={formData.bestseller}
-                onChange={(e) => setFormData({ ...formData, bestseller: e.target.checked })}
+                onChange={handleCheckboxChange}
                 className="mr-2"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Bestseller</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Bestseller
+              </span>
             </label>
           </div>
 
@@ -279,8 +332,9 @@ const AddProductModal: React.FC<{
               Description *
             </label>
             <textarea
+              name="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={handleChange}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
@@ -294,8 +348,9 @@ const AddProductModal: React.FC<{
             </label>
             <input
               type="url"
+              name="imageUrl"
               value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+              onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
             />
@@ -325,7 +380,9 @@ const AddProductModal: React.FC<{
             <div className="space-y-2">
               {formData.galleryImages.map((img, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <span className="flex-1 text-sm text-gray-600 dark:text-gray-400 truncate">{img}</span>
+                  <span className="flex-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+                    {img}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeGalleryImage(idx)}
@@ -350,7 +407,9 @@ const AddProductModal: React.FC<{
                 onChange={(e) => setNewDetail(e.target.value)}
                 placeholder="Add detail (e.g., 100% Cotton)"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addDetail())}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addDetail())
+                }
               />
               <button
                 type="button"
@@ -362,8 +421,13 @@ const AddProductModal: React.FC<{
             </div>
             <ul className="space-y-1">
               {formData.details.map((detail, idx) => (
-                <li key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{detail}</span>
+                <li
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded"
+                >
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {detail}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeDetail(idx)}
@@ -385,21 +449,27 @@ const AddProductModal: React.FC<{
               <input
                 type="text"
                 value={newSizeGuide.size}
-                onChange={(e) => setNewSizeGuide({ ...newSizeGuide, size: e.target.value })}
+                onChange={(e) =>
+                  setNewSizeGuide({ ...newSizeGuide, size: e.target.value })
+                }
                 placeholder="Size"
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <input
                 type="text"
                 value={newSizeGuide.chest}
-                onChange={(e) => setNewSizeGuide({ ...newSizeGuide, chest: e.target.value })}
+                onChange={(e) =>
+                  setNewSizeGuide({ ...newSizeGuide, chest: e.target.value })
+                }
                 placeholder="Chest"
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <input
                 type="text"
                 value={newSizeGuide.length}
-                onChange={(e) => setNewSizeGuide({ ...newSizeGuide, length: e.target.value })}
+                onChange={(e) =>
+                  setNewSizeGuide({ ...newSizeGuide, length: e.target.value })
+                }
                 placeholder="Length"
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
@@ -413,7 +483,10 @@ const AddProductModal: React.FC<{
             </div>
             <div className="space-y-1">
               {formData.sizeGuide.map((guide, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded"
+                >
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     {guide.size} - Chest: {guide.chest}, Length: {guide.length}
                   </span>
@@ -424,7 +497,7 @@ const AddProductModal: React.FC<{
                   >
                     ×
                   </button>
-              </div>
+                </div>
               ))}
             </div>
           </div>
@@ -451,23 +524,35 @@ const AddProductModal: React.FC<{
 };
 
 const ProductsAdmin: React.FC = () => {
+  // Destructure context functions
   const { products, addProduct, updateProduct, deleteProduct } = useProduct();
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>(
+    undefined
+  );
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      // Adjusted condition to correctly check if the click is outside the dropdown menu
+      const buttonElement = document.querySelector(
+        `[data-product-id="${openMenuId}"]`
+      );
+      if (
+        openMenuId &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        (!buttonElement || !buttonElement.contains(event.target as Node))
+      ) {
         setOpenMenuId(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [openMenuId]);
 
-  const toggleMenu = (id: number) => {
+  const toggleMenu = (id: string) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
@@ -477,20 +562,43 @@ const ProductsAdmin: React.FC = () => {
     setOpenMenuId(null);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
+    // ID should be string per context
     if (confirm("Are you sure you want to delete this product?")) {
-      deleteProduct(id);
+      try {
+        await deleteProduct(id); // Use context deleteProduct
+        alert("✅ Product deleted successfully!");
+      } catch (error) {
+        console.error("Delete failed:", error);
+        alert("Something went wrong while deleting the product.");
+      }
     }
     setOpenMenuId(null);
   };
 
-  const handleSave = (product: Product) => {
-    if (editingProduct) {
-      updateProduct(product.id, product);
-    } else {
-      addProduct(product);
+  // ✅ FIX: Use context functions for saving/updating
+  const handleSave = async (productData: Product) => {
+    const isUpdating = productData.id !== undefined && productData.id !== null;
+
+    try {
+      if (isUpdating) {
+        // ID should be string as per ProductContextType
+        await updateProduct(productData.id as string, productData);
+        alert("✅ Product updated successfully!");
+      } else {
+        // Strip out the client-side generated 'id' before passing to addProduct,
+        // although the ProductContext addProduct implementation should handle it
+        // by only using the product properties for the POST body.
+        await addProduct(productData);
+        alert("✅ Product added successfully!");
+      }
+    } catch (error) {
+      console.error(
+        `Failed to ${isUpdating ? "update" : "add"} product:`,
+        error
+      );
+      alert("Something went wrong while saving the product.");
     }
-    setEditingProduct(undefined);
   };
 
   const handleCloseModal = () => {
@@ -539,10 +647,18 @@ const ProductsAdmin: React.FC = () => {
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th scope="col" className="px-6 py-3">Product Name</th>
-              <th scope="col" className="px-6 py-3">Category</th>
-              <th scope="col" className="px-6 py-3">Price</th>
-              <th scope="col" className="px-6 py-3">Stock</th>
+              <th scope="col" className="px-6 py-3">
+                Product Name
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Category
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Price
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Stock
+              </th>
               <th scope="col" className="px-6 py-3">
                 <span className="sr-only">Actions</span>
               </th>
@@ -568,17 +684,25 @@ const ProductsAdmin: React.FC = () => {
                 </td>
                 <td className="px-6 py-4">{product.category}</td>
                 <td className="px-6 py-4">${product.price.toFixed(2)}</td>
-                <td className="px-6 py-4">{getStockStatus(product.stock || 0)}</td>
+                <td className="px-6 py-4">
+                  {getStockStatus(product.stock || 0)}
+                </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="relative inline-block text-left" ref={menuRef}>
+                  <div className="relative inline-block text-left">
                     <button
-                      onClick={() => toggleMenu(product.id)}
+                      data-product-id={product.id} // Added data attribute for click outside logic
+                      onClick={() =>
+                        product.id && toggleMenu(String(product.id))
+                      }
                       className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <MoreVerticalIcon className="w-5 h-5" />
                     </button>
                     {openMenuId === product.id && (
-                      <div className="absolute right-0 mt-2 w-40 origin-top-right bg-white dark:bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                      <div
+                        className="absolute right-0 mt-2 w-40 origin-top-right bg-white dark:bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10"
+                        ref={menuRef}
+                      >
                         <div className="py-1">
                           <button
                             onClick={() => handleEdit(product)}
@@ -587,7 +711,7 @@ const ProductsAdmin: React.FC = () => {
                             <EditIcon className="w-4 h-4 mr-2" /> Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => handleDelete(product.id as string)} // Cast to string for context
                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             <TrashIcon className="w-4 h-4 mr-2" /> Delete

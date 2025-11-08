@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mongodb_url = os.getenv("MONGO_URI")
+MONGO_URI = os.getenv("MONGO_URI")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "junhae-edits")  # fallback to default
 
-client = AsyncIOMotorClient(mongodb_url)
-database = client.junhaeStore
-product_collection = database["junhae-edits"]
+client = AsyncIOMotorClient(MONGO_URI)
+database = client[DATABASE_NAME]          # database
+product_collection = database["junhae-edits"]  # collection for products

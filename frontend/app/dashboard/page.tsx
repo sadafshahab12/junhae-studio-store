@@ -31,7 +31,7 @@ const Admin: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen pt-50">
             <Sidebar activePage={activePage} setActivePage={setActivePage} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
             <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
                 <AdminHeader isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
