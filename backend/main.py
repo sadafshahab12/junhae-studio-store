@@ -1,8 +1,8 @@
-from itertools import product
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from models.product import Product
 from database import product_collection
 from bson import ObjectId
+from slugify import slugify
 
 app = FastAPI()
 
@@ -39,4 +39,22 @@ async def get_product(slug: str):
     product = await product_collection.find_one({"slug": slug})
     if product:
         return product_helper(product)
-    return {"error" : "Product not found"}
+    raise HTTPException(status_code=404, detail="Product not found")
+
+
+@app.post("/products")
+async def create_products(product: Product):
+    slug = slugify(product.name)
+
+    existing_product = await product_collection.find_one({"slug": slug})
+    if existing_product:
+        raise HTTPException(
+            status_code=400, detail="Product with this name already exists"
+        )
+    product_dict = product.dict()
+    product_dict["slug"] = slug
+
+    result = await product_collection.insert_one(product_dict)
+    new_product = await product_collection.find_one({"id": result.inserted_id})
+
+    return product_helper(new_product)
