@@ -18,6 +18,8 @@ const RecommendedProducts: React.FC = () => {
                   src={product.imageUrl}
                   alt={product.name}
                   className="h-full w-full object-cover object-center"
+                  width={1000}
+                  height={1000}
                 />
               </div>
               <div className="mt-4 flex justify-between">

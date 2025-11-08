@@ -4,6 +4,9 @@ import "./globals.css";
 import Header from "./components/homePageComp/Header";
 import Footer from "./components/homePageComp/Footer";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import { OrderProvider } from "./context/OrderContext";
+import { ProductProvider } from "./context/ProductContext";
 
 const outfit = Outfit({
   weight: ["400", "700"],
@@ -26,9 +29,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className} ${outfit.style} antialiased`}>
         <AuthProvider>
-          <Header />
-          {children}
-          <Footer />
+          <CartProvider>
+            <OrderProvider>
+              <ProductProvider>
+                <Header />
+                {children}
+                <Footer />
+              </ProductProvider>
+            </OrderProvider>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

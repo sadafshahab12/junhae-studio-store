@@ -1,17 +1,20 @@
-"use client"
+"use client";
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { CATEGORIES, PRODUCTS } from "../data/constants";
+import { CATEGORIES } from "../data/constants";
+import { useProduct } from "../context/ProductContext";
 import ChevronDownIcon from "../icons/ChevronDownIcon";
 import ProductCard from "../components/shopPageComp/ProductCard";
 import ArrowRightIcon from "../icons/ArrowRightIcon";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const JunhaeEditsPage: React.FC = () => {
+  const { products: PRODUCTS } = useProduct();
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortOption, setSortOption] = useState("Newest");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-
+  const router = useRouter();
   const sortOptions = [
     "Newest",
     "Bestsellers",
@@ -53,12 +56,10 @@ const JunhaeEditsPage: React.FC = () => {
       case "Price: High to Low":
         filtered.sort((a, b) => b.price - a.price);
         break;
-      default:
-        break;
     }
 
     return filtered;
-  }, [activeCategory, sortOption]);
+  }, [PRODUCTS, activeCategory, sortOption]);
 
   const handleSortChange = (option: string) => {
     setSortOption(option);
@@ -69,33 +70,37 @@ const JunhaeEditsPage: React.FC = () => {
     if (category !== "Custom Prints") {
       setActiveCategory(category);
     } else {
-      // In a real app, this would navigate to the custom print page
       alert("Navigating to Create Your Own page!");
+      router.push("/create");
     }
   };
 
   return (
-    <div className="pt-16">
+    <div className="pt-50">
       <header className="py-8 text-center bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">
             Shop the Story You Wear.
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
-            Every print begins with an idea — yours.
+            Explore sustainable streetwear, minimalist Korean fashion, and
+            custom print-on-demand clothing. Each Junhae Studio piece is made
+            consciously — soft cotton, clean silhouettes, and timeless
+            expression.
           </p>
         </div>
       </header>
 
       <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
+          <div className="flex items-center justify-between h-16 w-full">
+            {/* Desktop Category Buttons */}
+            <div className="hidden sm:flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
               {CATEGORIES.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryClick(category)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors cursor-pointer ${
                     activeCategory === category && category !== "Custom Prints"
                       ? "bg-gray-900 text-white"
                       : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
@@ -109,6 +114,23 @@ const JunhaeEditsPage: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* Mobile Dropdown */}
+            <div className="flex sm:hidden w-full mr-2">
+              <select
+                value={activeCategory}
+                onChange={(e) => handleCategoryClick(e.target.value)}
+                className="w-full border border-gray-300 rounded-full px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                {CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort Dropdown */}
             <div className="relative ml-4" ref={sortRef}>
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
@@ -127,7 +149,7 @@ const JunhaeEditsPage: React.FC = () => {
                     <button
                       key={option}
                       onClick={() => handleSortChange(option)}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer ${
                         sortOption === option
                           ? "font-semibold text-gray-900"
                           : "text-gray-700"
@@ -150,25 +172,25 @@ const JunhaeEditsPage: React.FC = () => {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-          {/* Pagination would go here in a full build-out */}
         </div>
       </section>
 
       <section className="bg-stone-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Want Something That’s You?
+            Design It. Wear It. Live It.
           </h2>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            {` You're`} the artist. {`We're`} the canvas. Bring your vision to
-            life on our premium, sustainable apparel.
+            Print your art, thoughts, or words on timeless, minimalist pieces.
+            Each design is printed on demand using sustainable materials — your
+            story, your style, your Junhae.
           </p>
           <div className="mt-8">
             <Link
-              href="#"
+              href="/create"
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-700 transition-colors duration-300"
             >
-              Create Your Own Print
+              Print Your Vision
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
           </div>

@@ -1,26 +1,38 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { CartItem as CartItemType } from "../data/types";
+import { useRouter } from "next/navigation";
+import { useCart } from "../context/CartContext";
+import { useOrder } from "../context/OrderContext";
+import { useAuth } from "../context/AuthContext";
+import { Order } from "../data/types";
 import ShoppingBagIcon from "../icons/ShoppingBagIcon";
 import ChevronDownIcon from "../icons/ChevronDownIcon";
 import LockClosedIcon from "../icons/LockClosedIcon";
-
-interface CheckoutPageProps {
-  cart: CartItemType[];
-  setPage: (page: "home" | "cart" | "checkout") => void;
-}
+import Link from "next/link";
+import { CartItem } from "../data/types";
 
 interface OrderSummaryProps {
-  cart: CartItemType[];
+  cart: CartItem[];
   isMobile?: boolean;
+  shipping?: number;
+  subtotal?: number;
+  tax?: number;
+  total?: number;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, isMobile = false }) => {
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 0 ? 5.0 : 0;
-  const tax = subtotal > 0 ? subtotal * 0.08 : 0;
-  const total = subtotal + shipping + tax;
+const OrderSummary: React.FC<OrderSummaryProps> = ({ 
+  cart, 
+  isMobile = false,
+  shipping: propShipping,
+  subtotal: propSubtotal,
+  tax: propTax,
+  total: propTotal,
+}) => {
+  const subtotal = propSubtotal ?? cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shipping = propShipping ?? (subtotal > 0 ? 5.0 : 0);
+  const tax = propTax ?? (subtotal > 0 ? subtotal * 0.08 : 0);
+  const total = propTotal ?? (subtotal + shipping + tax);
 
   return (
     <div className={`${isMobile ? "block lg:hidden" : "hidden lg:block"}`}>
@@ -79,19 +91,70 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, isMobile = false }) =
   );
 };
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
+const CheckoutPage: React.FC = () => {
+  const router = useRouter();
+  const { cart, clearCart, getCartTotal } = useCart();
+  const { addOrder } = useOrder();
+  const { currentUser } = useAuth();
   const [shippingMethod, setShippingMethod] = useState<"standard" | "express">("standard");
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [formData, setFormData] = useState({
+    email: currentUser?.email || "",
+    name: currentUser?.name || "",
+    address: "",
+    city: "",
+    postalCode: "",
+    cardNumber: "",
+    nameOnCard: "",
+    expirationDate: "",
+    cvc: "",
+  });
 
   useEffect(() => {
     const timeout = requestAnimationFrame(() => setIsMounted(true));
     return () => cancelAnimationFrame(timeout);
   }, []);
 
+  useEffect(() => {
+    if (cart.length === 0) {
+      router.push("/cart");
+    }
+  }, [cart, router]);
+
+  const subtotal = getCartTotal();
+  const shipping = shippingMethod === "express" ? 12.0 : 5.0;
+  const tax = subtotal > 0 ? subtotal * 0.08 : 0;
+  const total = subtotal + shipping + tax;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Order placed successfully! 🎉");
+    
+    // Create orders for each cart item
+    const orderDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    cart.forEach((item) => {
+      const order: Order = {
+        id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        customerName: formData.name,
+        customerEmail: formData.email,
+        productName: `${item.name} (${item.size}, ${item.color})`,
+        quantity: item.quantity,
+        status: "Processing",
+        date: orderDate,
+        total: item.price * item.quantity + shipping + (item.price * item.quantity * 0.08),
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=random`,
+      };
+      addOrder(order);
+    });
+
+    // Clear cart and redirect
+    clearCart();
+    router.push(`/order-success?total=${total.toFixed(2)}`);
   };
 
   return (
@@ -104,16 +167,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-20 lg:hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setPage("home");
-              }}
+            <Link
+              href="/"
               className="text-xl font-bold tracking-wider text-gray-900"
             >
               JUNHAE STUDIO
-            </a>
+            </Link>
             <button
               type="button"
               onClick={() => setIsSummaryOpen(!isSummaryOpen)}
@@ -131,43 +190,42 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
         </div>
         {isSummaryOpen && (
           <div className="border-t border-gray-200 p-4 bg-stone-50">
-            <OrderSummary cart={cart} isMobile={true} />
+            <OrderSummary 
+              cart={cart} 
+              isMobile={true}
+              shipping={shipping}
+              subtotal={subtotal}
+              tax={tax}
+              total={total}
+            />
           </div>
         )}
       </header>
 
       {/* MAIN */}
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-24 pt-50 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
           {/* FORM SECTION */}
           <div className="lg:col-span-1">
             <div className="hidden lg:block text-center mb-12">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage("home");
-                }}
+              <Link
+                href="/"
                 className="text-2xl font-bold tracking-wider text-gray-900"
               >
                 JUNHAE STUDIO
-              </a>
+              </Link>
             </div>
 
             {/* Breadcrumb */}
             <nav aria-label="Progress">
               <ol role="list" className="flex items-center text-sm font-medium text-gray-500">
                 <li className="flex">
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage("cart");
-                    }}
+                  <Link
+                    href="/cart"
                     className="hover:text-gray-700"
                   >
                     Cart
-                  </a>
+                  </Link>
                 </li>
                 <li className="flex items-center pl-2">
                   <svg
@@ -220,6 +278,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                     id="email-address"
                     name="email-address"
                     autoComplete="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                   />
@@ -238,6 +298,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                       type="text"
                       name="name"
                       id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                     />
@@ -251,6 +313,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                       name="address"
                       id="address"
                       autoComplete="street-address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                     />
@@ -263,6 +327,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                       type="text"
                       name="city"
                       id="city"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                     />
@@ -275,6 +341,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                       type="text"
                       name="postal-code"
                       id="postal-code"
+                      value={formData.postalCode}
+                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                     />
@@ -333,6 +401,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                         type="text"
                         id="card-number"
                         name="card-number"
+                        value={formData.cardNumber}
+                        onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                       />
@@ -348,6 +418,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                         type="text"
                         id="name-on-card"
                         name="name-on-card"
+                        value={formData.nameOnCard}
+                        onChange={(e) => setFormData({ ...formData, nameOnCard: e.target.value })}
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                       />
@@ -363,6 +435,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                         type="text"
                         name="expiration-date"
                         id="expiration-date"
+                        value={formData.expirationDate}
+                        onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                       />
@@ -375,6 +449,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
                         type="text"
                         name="cvc"
                         id="cvc"
+                        value={formData.cvc}
+                        onChange={(e) => setFormData({ ...formData, cvc: e.target.value })}
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
                       />
@@ -402,7 +478,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, setPage }) => {
           {/* SUMMARY SIDEBAR */}
           <aside className="lg:col-span-1 lg:sticky lg:top-16">
             <div className="py-12">
-              <OrderSummary cart={cart} />
+              <OrderSummary 
+                cart={cart} 
+                shipping={shipping}
+                subtotal={subtotal}
+                tax={tax}
+                total={total}
+              />
             </div>
           </aside>
         </div>

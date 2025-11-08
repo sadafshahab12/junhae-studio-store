@@ -1,34 +1,16 @@
+"use client";
 import React from "react";
-import { CartItem as CartItemType } from "../data/types"
 import Image from "next/image";
+import Link from "next/link";
 import RecommendedProducts from "../components/cartPageComp/RecommendedProducts";
 import EmptyCart from "../components/cartPageComp/EmptyCart";
 import MinusIcon from "../icons/MinusIcon";
 import PlusIcon from "../icons/PlusIcon";
 import TrashIcon from "../icons/TrashIcon";
+import { useCart } from "../context/CartContext";
 
-interface CartPageProps {
-  cart: CartItemType[];
-  setCart: React.Dispatch<React.SetStateAction<CartItemType[]>>;
-  setPage: (page: "home" | "cart") => void;
-}
-
-const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) {
-      removeItem(id);
-      return;
-    }
-    setCart(
-      cart.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setCart(cart.filter((item) => item.id !== id));
-  };
+const CartPage: React.FC = () => {
+  const { cart, updateQuantity, removeFromCart } = useCart();
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -42,7 +24,9 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
     return (
       <div className="bg-white">
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-          <EmptyCart onShopClick={() => setPage("home")} />
+          <EmptyCart
+            onShopClick={() => (window.location.href = "/junhae-edits")}
+          />
         </main>
         <RecommendedProducts />
       </div>
@@ -50,7 +34,7 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
   }
 
   return (
-    <div className="bg-white pt-16">
+    <div className="bg-white pt-40">
       <main className="mx-auto max-w-7xl px-4 pt-16 pb-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-none">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -80,6 +64,8 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
                         src={product.imageUrl}
                         alt={product.name}
                         className="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
+                        width={1000}
+                        height={1000}
                       />
                     </div>
 
@@ -137,7 +123,7 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
                           <div className="absolute right-0 top-0">
                             <button
                               type="button"
-                              onClick={() => removeItem(product.id)}
+                              onClick={() => removeFromCart(product.id)}
                               className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
                             >
                               <span className="sr-only">Remove</span>
@@ -158,14 +144,13 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
                 ))}
               </ul>
               <div className="pt-8 pb-32 lg:pb-0">
-                <button
-                  type="button"
-                  onClick={() => setPage("home")}
+                <Link
+                  href="/junhae-edits"
                   className="font-medium text-green-900 hover:text-green-700"
                 >
                   Continue Shopping
                   <span aria-hidden="true"> &rarr;</span>
-                </button>
+                </Link>
               </div>
             </section>
 
@@ -215,13 +200,12 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
               </dl>
 
               <div className="mt-6">
-                <button
-                  type="submit"
-                  form="cart-form"
-                  className="w-full rounded-md border border-transparent bg-gray-900 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+                <Link
+                  href="/checkout"
+                  className="block w-full text-center rounded-md border border-transparent bg-gray-900 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-50"
                 >
                   Proceed to Checkout &rarr;
-                </button>
+                </Link>
               </div>
             </section>
           </form>
@@ -235,13 +219,12 @@ const CartPage: React.FC<CartPageProps> = ({ cart, setCart, setPage }) => {
               ${total.toFixed(2)}
             </p>
           </div>
-          <button
-            type="submit"
-            form="cart-form"
-            className="w-full max-w-xs rounded-md border border-transparent bg-gray-900 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-gray-700"
+          <Link
+            href="/checkout"
+            className="w-full max-w-xs text-center rounded-md border border-transparent bg-gray-900 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-gray-700"
           >
             Checkout
-          </button>
+          </Link>
         </div>
       </div>
       <RecommendedProducts />

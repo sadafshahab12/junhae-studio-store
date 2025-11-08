@@ -6,9 +6,12 @@ import UserIcon from "@/app/icons/UserIcon";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useCart } from "@/app/context/CartContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { getCartItemCount } = useCart();
+  const cartCount = getCartItemCount();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
@@ -44,9 +47,14 @@ const Header = () => {
             </Link>
             <Link
               href="/cart"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="relative text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ShoppingBagIcon />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </Link>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}

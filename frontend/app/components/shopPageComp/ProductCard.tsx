@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 
 import Image from "next/image";
@@ -11,24 +12,25 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <div className="group relative text-left">
-      <div className="relative w-full h-0 pb-[125%] bg-gray-200 overflow-hidden">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
-          width={1000}
-          height={1000}
-        />
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)]">
-          <button className="w-full px-4 py-3 bg-white/90 text-black text-sm font-semibold rounded-full backdrop-blur-sm  group-hover:opacity-100 transition-opacity duration-300 transform group-hover:-translate-y-2 translate-y-0">
-            View Details
-          </button>
+      <Link href={`/junhae-edits/${product.slug}`}>
+        <div className="relative w-full h-0 pb-[125%] bg-gray-200 overflow-hidden cursor-pointer">
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+            width={1000}
+            height={1000}
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)]">
+            <button className="w-full px-4 py-3 bg-white/90 text-black text-sm font-semibold rounded-full backdrop-blur-sm  group-hover:opacity-100 transition-opacity duration-300 transform group-hover:-translate-y-2 translate-y-0">
+              View Details
+            </button>
+          </div>
         </div>
-      </div>
+      </Link>
       <div className="mt-4">
         <h3 className="text-base font-semibold text-gray-800">
-          <Link href="/">
-            <span aria-hidden="true" className="absolute inset-0" />
+          <Link href={`/junhae-edits/${product.slug}`} className="hover:text-gray-600">
             {product.name}
           </Link>
         </h3>

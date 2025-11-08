@@ -5,6 +5,7 @@ export interface Collection {
 }
 export interface Product {
   id: number;
+  slug: string;
   name: string;
   tagline: string;
   price: number;

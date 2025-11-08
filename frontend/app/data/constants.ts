@@ -17,7 +17,8 @@ export const COLLECTIONS: Collection[] = [
   {
     title: "The Minimal Edit",
     description: "Neutral streetwear for clean, timeless living.",
-    imageUrl: "/featured collections/Our Best-Selling Moon Collection — bold print, everyday comfort, ready to wear now..png",
+    imageUrl:
+      "/featured collections/Our Best-Selling Moon Collection — bold print, everyday comfort, ready to wear now..png",
   },
   {
     title: "Street Print Drop",
@@ -70,17 +71,11 @@ export const NAV_LINKS = [
   },
 ];
 
-export const CATEGORIES = [
-  "All",
-  "Tees",
-  "Hoodies",
-  "Tops",
-  "Accessories",
-  "Custom Prints",
-];
+export const CATEGORIES = ["All", "Tees", "Hoodies", "Tops", "Custom Prints"];
 export const PRODUCTS: Product[] = [
   {
     id: 1,
+    slug: "seoul-silence-tee",
     name: "Seoul Silence Tee",
     tagline: "Expressive tranquility",
     price: 45.0,
@@ -91,12 +86,13 @@ export const PRODUCTS: Product[] = [
       "https://picsum.photos/id/1027/800/1000",
     ],
     description:
-      "Inspired by the quiet moments in a bustling city, the Seoul Silence Tee is a statement of peaceful rebellion. Its minimalist design speaks volumes, offering a canvas for your own story in the urban landscape. Crafted for comfort, designed for expression.",
+      "Seoul Silence Tee captures the contrast between chaos and calm — inspired by the still moments in the city that never stops. Its clean lines and soft cotton tell a story of quiet rebellion, where confidence meets serenity. A piece for those who move silently but make noise with purpose.",
     details: [
       "100% Organic Ringspun Combed Cotton",
       "Medium Fit, 180 g/m²",
-      "Set-in sleeve",
-      "Sustainably sourced and printed",
+      "Set-in sleeve, ribbed neck",
+      "Minimal graphic print at front and back",
+      "Sustainably made in limited runs",
     ],
     sizeGuide: [
       { size: "S", chest: '38"', length: '28"' },
@@ -110,6 +106,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 2,
+    slug: "midnight-bloom-hoodie",
     name: "Midnight Bloom Hoodie",
     tagline: "Find calm in the chaos",
     price: 85.0,
@@ -121,12 +118,13 @@ export const PRODUCTS: Product[] = [
       "https://picsum.photos/id/109/800/1000",
     ],
     description:
-      "The Midnight Bloom Hoodie is for the late-night dreamers and the early morning creators. Its soft, heavyweight fabric provides a sanctuary of comfort, while the subtle floral graphic represents the beauty that can be found in darkness. A cozy armor for your creative journey.",
+      "For the night thinkers and early dreamers — Midnight Bloom Hoodie blends softness and structure. The floral graphic blooms subtly under dim light, symbolizing creativity that thrives even in stillness. Designed for comfort, built for expression.",
     details: [
       "85% Organic Ringspun Combed Cotton, 15% Recycled Polyester",
-      "Heavyweight, 350 g/m²",
+      "Heavyweight 350 g/m²",
       "Double-layered hood",
-      "Kangaroo pocket at front",
+      "Front kangaroo pocket",
+      "Ribbed cuffs and hem",
     ],
     sizeGuide: [
       { size: "S", chest: '40"', length: '27.5"' },
@@ -140,54 +138,99 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 3,
+    slug: "urban-canvas-top",
     name: "Urban Canvas Top",
     tagline: "Your city, your story",
     price: 55.0,
     imageUrl: "https://picsum.photos/id/128/800/1000",
     galleryImages: ["https://picsum.photos/id/128/800/1000"],
-    description: "",
-    details: [],
-    sizeGuide: [],
+    description:
+      "Urban Canvas Top is where street meets soul — a clean silhouette that gives you space to express your own rhythm. Perfect for layering or wearing solo, it embodies the freedom of movement and self-expression in modern life.",
+    details: [
+      "100% Organic Cotton",
+      "Lightweight fabric with soft hand feel",
+      "Minimal front design with subtle print",
+      "Relaxed fit, true to size",
+    ],
+    sizeGuide: [
+      { size: "S", chest: '36"', length: '26.5"' },
+      { size: "M", chest: '39"', length: '27.5"' },
+      { size: "L", chest: '42"', length: '28.5"' },
+      { size: "XL", chest: '45"', length: '29.5"' },
+    ],
     category: "Tops",
     stock: 95,
   },
   {
     id: 4,
+    slug: "minimalist-tote",
     name: "The Minimalist Tote",
     tagline: "Carry creativity",
     price: 35.0,
     imageUrl: "https://picsum.photos/id/133/800/1000",
     galleryImages: ["https://picsum.photos/id/133/800/1000"],
-    description: "",
-    details: [],
+    description:
+      "Simplicity done right. The Minimalist Tote carries more than just your essentials — it carries your daily rhythm. Designed for creators on the move, made from durable organic canvas, and finished with a clean Junhae Studio print.",
+    details: [
+      "100% Organic Cotton Canvas",
+      "Reinforced straps for everyday use",
+      "Printed with eco-friendly ink",
+      "Size: 38 x 42 cm",
+    ],
     sizeGuide: [],
     category: "Accessories",
     stock: 150,
   },
   {
     id: 5,
+    slug: "concrete-dream-tee",
     name: "Concrete Dream Tee",
     tagline: "Built on inspiration",
     price: 45.0,
     imageUrl: "https://picsum.photos/id/145/800/1000",
     galleryImages: ["https://picsum.photos/id/145/800/1000"],
-    description: "",
-    details: [],
-    sizeGuide: [],
+    description:
+      "Concrete Dream Tee embodies the energy of creation — rough, real, and full of purpose. Designed for thinkers who turn ideas into movement. Its soft premium cotton drapes effortlessly, balancing structure with ease. A wearable reminder that dreams don’t live in clouds — they rise from the ground up.",
+    details: [
+      "100% Organic Ringspun Combed Cotton",
+      "Medium fit, 180 g/m²",
+      "Front & back minimalist print",
+      "Durable stitching for longevity",
+      "Ethically produced in small batches",
+    ],
+    sizeGuide: [
+      { size: "S", chest: '38"', length: '28"' },
+      { size: "M", chest: '41"', length: '29"' },
+      { size: "L", chest: '44"', length: '30"' },
+      { size: "XL", chest: '47"', length: '31"' },
+    ],
     category: "Tees",
     bestseller: true,
     stock: 0,
   },
   {
     id: 6,
+    slug: "sage-comfort-hoodie",
     name: "Sage Comfort Hoodie",
     tagline: "Soft hues for sharp minds",
     price: 90.0,
     imageUrl: "https://picsum.photos/id/218/800/1000",
     galleryImages: ["https://picsum.photos/id/218/800/1000"],
-    description: "",
-    details: [],
-    sizeGuide: [],
+    description:
+      "Sage Comfort Hoodie is where calm meets clarity — muted tones that speak softly but confidently. Made for creative thinkers who prefer comfort without compromise. The kind of hoodie that feels like a slow morning and looks like intention.",
+    details: [
+      "85% Organic Ringspun Combed Cotton, 15% Recycled Polyester",
+      "Heavyweight 350 g/m²",
+      "Double-layered hood with drawcord",
+      "Front kangaroo pocket",
+      "Ribbed cuffs and hem for structured fit",
+    ],
+    sizeGuide: [
+      { size: "S", chest: '40"', length: '27.5"' },
+      { size: "M", chest: '43"', length: '28.5"' },
+      { size: "L", chest: '46"', length: '29.5"' },
+      { size: "XL", chest: '49"', length: '30.5"' },
+    ],
     category: "Hoodies",
     stock: 60,
   },
