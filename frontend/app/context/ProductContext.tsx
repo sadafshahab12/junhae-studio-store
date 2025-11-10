@@ -35,6 +35,7 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   void isLoading;
+
   // Load products from API on mount
   useEffect(() => {
     const fetchProducts = async () => {
@@ -61,7 +62,6 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
       // an 'id' field often causes a 422 Unprocessable Entity error.
       const { id, ...payload } = product;
       void id;
-
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`,
         {
@@ -144,7 +144,7 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
   };
 
   const getProductBySlug = (slug: string) => {
-    return products.find((product) => product.slug === slug);
+    return products.find((product: Product) => product.slug === slug);
   };
 
   const value = {

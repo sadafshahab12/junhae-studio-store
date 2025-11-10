@@ -12,9 +12,9 @@ export interface Product {
   imageUrl: string;
   galleryImages: string[];
   description: string;
+  category: string;
   details: string[];
   sizeGuide: { size: string; chest: string; length: string }[];
-  category: string;
   newest?: boolean;
   bestseller?: boolean;
   stock?: number;

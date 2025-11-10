@@ -1,15 +1,11 @@
-"use client"
+"use client";
 import React from "react";
 
 import Image from "next/image";
 import { Product } from "@/app/data/types";
 import Link from "next/link";
 
-interface ProductCardProps {
-  product: Product;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div className="group relative text-left">
       <Link href={`/junhae-edits/${product.slug}`}>
@@ -30,7 +26,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </Link>
       <div className="mt-4">
         <h3 className="text-base font-semibold text-gray-800">
-          <Link href={`/junhae-edits/${product.slug}`} className="hover:text-gray-600">
+          <Link
+            href={`/junhae-edits/${product.slug}`}
+            className="hover:text-gray-600"
+          >
             {product.name}
           </Link>
         </h3>

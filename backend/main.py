@@ -4,16 +4,21 @@ from models.product import Product
 from database import product_collection
 from bson import ObjectId
 from slugify import slugify
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = FastAPI()
-
+frontend_url = os.getenv("FRONTEND_URL")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+print("Frontend URL:", frontend_url)
 
 
 def product_helper(product) -> dict:
