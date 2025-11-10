@@ -1,8 +1,6 @@
 import React from 'react';
 
-interface CheckCircleIconProps extends React.SVGProps<SVGSVGElement> {}
-
-const CheckCircleIcon: React.FC<CheckCircleIconProps> = (props) => (
+const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"

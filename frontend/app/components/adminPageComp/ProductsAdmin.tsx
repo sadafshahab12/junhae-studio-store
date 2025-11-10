@@ -7,8 +7,6 @@ import TrashIcon from "@/app/icons/TrashIcon";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 
-// (AddProductModal and ProductFormData interface remain the same)
-
 interface ProductFormData {
   name: string;
   slug: string;
@@ -25,27 +23,34 @@ interface ProductFormData {
   sizeGuide: { size: string; chest: string; length: string }[];
 }
 
+// Helper function to calculate the initial form data based on the 'product' prop
+const getInitialFormData = (product?: Product): ProductFormData => ({
+  name: product?.name || "",
+  slug: product?.slug || "",
+  tagline: product?.tagline || "",
+  price: product?.price || 0,
+  description: product?.description || "",
+  category: product?.category || "Tees",
+  stock: product?.stock || 0,
+  newest: product?.newest || false,
+  bestseller: product?.bestseller || false,
+  imageUrl: product?.imageUrl || "",
+  galleryImages: product?.galleryImages || [],
+  details: product?.details || [],
+  sizeGuide: product?.sizeGuide || [],
+});
+
 const AddProductModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   product?: Product;
   onSave: (product: Product) => void;
 }> = ({ isOpen, onClose, product, onSave }) => {
-  const [formData, setFormData] = useState<ProductFormData>({
-    name: product?.name || "",
-    slug: product?.slug || "",
-    tagline: product?.tagline || "",
-    price: product?.price || 0,
-    description: product?.description || "",
-    category: product?.category || "Tees",
-    stock: product?.stock || 0,
-    newest: product?.newest || false,
-    bestseller: product?.bestseller || false,
-    imageUrl: product?.imageUrl || "",
-    galleryImages: product?.galleryImages || [],
-    details: product?.details || [],
-    sizeGuide: product?.sizeGuide || [],
-  });
+  // ✅ FIX: Initialize formData using the helper function.
+  // This state will reset correctly when the component is remounted via the 'key' prop in the parent.
+  const [formData, setFormData] = useState<ProductFormData>(() =>
+    getInitialFormData(product)
+  );
 
   const [newDetail, setNewDetail] = useState("");
   const [newSizeGuide, setNewSizeGuide] = useState({
@@ -55,47 +60,16 @@ const AddProductModal: React.FC<{
   });
   const [newGalleryImage, setNewGalleryImage] = useState("");
 
+  // Keep this useEffect only for resetting auxiliary inputs on mount/remount
   useEffect(() => {
-    // Reset form data when the modal is opened for a new product or an edit
-    if (!product) {
-      setFormData({
-        name: "",
-        slug: "",
-        tagline: "",
-        price: 0,
-        description: "",
-        category: "Tees",
-        stock: 0,
-        newest: false,
-        bestseller: false,
-        imageUrl: "",
-        galleryImages: [],
-        details: [],
-        sizeGuide: [],
-      });
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        name: product.name,
-        slug: product.slug || "",
-        tagline: product.tagline,
-        price: product.price,
-        description: product.description,
-        category: product.category,
-        stock: product.stock || 0,
-        newest: product.newest || false,
-        bestseller: product.bestseller || false,
-        imageUrl: product.imageUrl,
-        galleryImages: product.galleryImages || [],
-        details: product.details || [],
-        sizeGuide: product.sizeGuide || [],
-      }));
-    }
-    // Also reset auxiliary inputs when the modal state changes
-    setNewDetail("");
-    setNewSizeGuide({ size: "", chest: "", length: "" });
-    setNewGalleryImage("");
-  }, [product, isOpen]); // Added isOpen to re-trigger on open
+    const resetDetails = async () => {
+      // Reset auxiliary inputs when the modal opens for a new product or an edit
+      setNewDetail("");
+      setNewSizeGuide({ size: "", chest: "", length: "" });
+      setNewGalleryImage("");
+    };
+    resetDetails();
+  }, [product, isOpen]); // Reruns when product context changes or modal state toggles
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -576,7 +550,7 @@ const ProductsAdmin: React.FC = () => {
     setOpenMenuId(null);
   };
 
-  // ✅ FIX: Use context functions for saving/updating
+  // ✅ Use context functions for saving/updating
   const handleSave = async (productData: Product) => {
     const isUpdating = productData.id !== undefined && productData.id !== null;
 
@@ -726,7 +700,12 @@ const ProductsAdmin: React.FC = () => {
           </tbody>
         </table>
       </div>
+      {/* ✅ FIX: Add a key to force React to remount the modal component whenever it opens 
+        or the product being edited changes. This ensures the component's internal 
+        useState is re-initialized correctly, fixing the cascading render bug.
+      */}
       <AddProductModal
+        key={isModalOpen ? editingProduct?.id || "new-product" : "modal-closed"}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         product={editingProduct}

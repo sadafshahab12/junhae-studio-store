@@ -60,7 +60,7 @@ const CreatePage: React.FC = () => {
   };
 
   return (
-    <div className="pt-16">
+    <div className="pt-40">
       {/* Hero Section */}
       <section className="py-20 sm:py-24 text-center bg-stone-100 border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

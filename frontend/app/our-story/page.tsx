@@ -55,7 +55,7 @@ const OurStoryPage: React.FC = () => {
   ];
 
   return (
-    <div className="pt-16 bg-stone-50">
+    <div className="pt-40 bg-stone-50">
       {/* Hero Section */}
       <section className="relative h-[60vh] md:h-[80vh] flex items-center justify-center text-center text-white bg-gray-800">
         <div className="absolute inset-0 bg-black opacity-30"></div>

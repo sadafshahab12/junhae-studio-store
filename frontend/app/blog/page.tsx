@@ -37,7 +37,7 @@ const BlogPage: React.FC = () => {
   }, [otherPosts, activeCategory, searchTerm]);
 
   return (
-    <div className="pt-16 bg-white">
+    <div className="pt-38 bg-white">
       {/* Hero Section */}
       {featuredPost && (
         <section className="relative h-[60vh] md:h-[70vh] flex items-end justify-start text-white bg-gray-900">

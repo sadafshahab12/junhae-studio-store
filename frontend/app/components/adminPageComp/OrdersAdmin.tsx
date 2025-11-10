@@ -1,34 +1,26 @@
-"use client"
+"use client";
 import { Order } from "@/app/data/types";
 import { useOrder } from "@/app/context/OrderContext";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 const OrdersAdmin: React.FC = () => {
   const { orders, updateOrderStatus } = useOrder();
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    let filtered = orders;
-    
-    if (statusFilter !== "All") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (order) =>
-          order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.productName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    setFilteredOrders(filtered);
-  }, [orders, statusFilter, searchTerm]);
+  const filteredOrders = orders.filter((order) => {
+    const matchesStatus =
+      statusFilter === "All" || order.status === statusFilter;
+    const matchesSearch =
+      !searchTerm ||
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.productName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusBadge = (status: Order["status"]) => {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
@@ -85,7 +77,7 @@ const OrdersAdmin: React.FC = () => {
       <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
         Orders ({filteredOrders.length})
       </h2>
-      
+
       {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
@@ -146,56 +138,59 @@ const OrdersAdmin: React.FC = () => {
               </tr>
             ) : (
               filteredOrders.map((order) => (
-              <tr
-                key={order.id}
-                className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-              >
-                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                  {order.id}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    <Image
-                      src={order.avatarUrl}
-                      alt={order.customerName}
-                      className="w-8 h-8 rounded-full object-cover mr-3"
-                      width={1000}
-                      height={1000}
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {order.customerName}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {order.customerEmail}
+                <tr
+                  key={order.id}
+                  className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                >
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                    {order.id}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      <Image
+                        src={order.avatarUrl}
+                        alt={order.customerName}
+                        className="w-8 h-8 rounded-full object-cover mr-3"
+                        width={1000}
+                        height={1000}
+                      />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {order.customerName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.customerEmail}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  {order.productName} ({order.quantity})
-                </td>
-                <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
-                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                  ${order.total.toFixed(2)}
-                </td>
-                <td className="px-6 py-4">{order.date}</td>
-                <td className="px-6 py-4">
-                  <select
-                    value={order.status}
-                    onChange={(e) =>
-                      handleStatusChange(order.id, e.target.value as Order["status"])
-                    }
-                    className="text-xs px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  >
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </td>
-              </tr>
-            ))
+                  </td>
+                  <td className="px-6 py-4">
+                    {order.productName} ({order.quantity})
+                  </td>
+                  <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                    ${order.total.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4">{order.date}</td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          order.id,
+                          e.target.value as Order["status"]
+                        )
+                      }
+                      className="text-xs px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

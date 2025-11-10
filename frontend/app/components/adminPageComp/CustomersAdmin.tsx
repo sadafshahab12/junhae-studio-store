@@ -1,18 +1,16 @@
-"use client"
+"use client";
 import { Customer } from "@/app/data/types";
 import { useOrder } from "@/app/context/OrderContext";
 import Image from "next/image";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 
 const CustomersAdmin: React.FC = () => {
   const { orders } = useOrder();
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Generate customers from orders
-  useEffect(() => {
+  const customers = useMemo(() => {
     const customerMap = new Map<string, Customer>();
-    
+
     orders.forEach((order) => {
       if (!customerMap.has(order.customerEmail)) {
         customerMap.set(order.customerEmail, {
@@ -29,7 +27,7 @@ const CustomersAdmin: React.FC = () => {
       }
     });
 
-    setCustomers(Array.from(customerMap.values()));
+    return Array.from(customerMap.values());
   }, [orders]);
 
   const filteredCustomers = useMemo(() => {
@@ -46,7 +44,7 @@ const CustomersAdmin: React.FC = () => {
       <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
         Customers ({filteredCustomers.length})
       </h2>
-      
+
       {/* Search */}
       <div className="mb-6">
         <input
@@ -85,27 +83,27 @@ const CustomersAdmin: React.FC = () => {
               </tr>
             ) : (
               filteredCustomers.map((customer) => (
-              <tr
-                key={customer.id}
-                className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-              >
-                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                  <div className="flex items-center">
-                    <Image
-                      src={customer.avatarUrl}
-                      alt={customer.name}
-                      className="w-10 h-10 rounded-full object-cover mr-4"
-                      width={1000}
-                      height={1000}
-                    />
-                    {customer.name}
-                  </div>
-                </td>
-                <td className="px-6 py-4">{customer.email}</td>
-                <td className="px-6 py-4">{customer.totalOrders}</td>
-                <td className="px-6 py-4">{customer.joinDate}</td>
-              </tr>
-            ))
+                <tr
+                  key={customer.id}
+                  className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                >
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                    <div className="flex items-center">
+                      <Image
+                        src={customer.avatarUrl}
+                        alt={customer.name}
+                        className="w-10 h-10 rounded-full object-cover mr-4"
+                        width={1000}
+                        height={1000}
+                      />
+                      {customer.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">{customer.email}</td>
+                  <td className="px-6 py-4">{customer.totalOrders}</td>
+                  <td className="px-6 py-4">{customer.joinDate}</td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

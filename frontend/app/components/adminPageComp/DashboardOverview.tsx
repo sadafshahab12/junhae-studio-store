@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import StatCard from "./StatCard";
 import { CUSTOMERS } from "@/app/data/constants";
 import { CartItem } from "@/app/data/types";
@@ -14,26 +14,34 @@ import Link from "next/link";
 const DashboardOverview: React.FC = () => {
   const { orders, getTotalSales } = useOrder();
   const { products } = useProduct();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartTotal, setCartTotal] = useState(0);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    void setCartItems
+    try {
+      const storedCart = localStorage.getItem("junhaeCart");
+      return storedCart ? JSON.parse(storedCart) : [];
+    } catch (error) {
+      console.error("Failed to load cart", error);
+      return [];
+    }
+  });
 
-  useEffect(() => {
-    // Load cart from localStorage
+  const [cartTotal, setCartTotal] = useState(() => {
+    void setCartTotal;
     try {
       const storedCart = localStorage.getItem("junhaeCart");
       if (storedCart) {
         const cart = JSON.parse(storedCart);
-        setCartItems(cart);
-        const total = cart.reduce(
+        return cart.reduce(
           (sum: number, item: CartItem) => sum + item.price * item.quantity,
           0
         );
-        setCartTotal(total);
       }
+      return 0;
     } catch (error) {
       console.error("Failed to load cart", error);
+      return 0;
     }
-  }, []);
+  });
 
   const totalSales = getTotalSales();
 
@@ -129,7 +137,10 @@ const DashboardOverview: React.FC = () => {
               </tbody>
               <tfoot>
                 <tr className="bg-gray-50 dark:bg-gray-700">
-                  <td colSpan={5} className="px-4 py-3 text-right font-semibold">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-3 text-right font-semibold"
+                  >
                     Cart Total:
                   </td>
                   <td className="px-4 py-3 font-bold text-lg">
