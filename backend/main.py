@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from models.product import Product
-from database import product_collection
+from backend.models.product import Product
+from backend.database import product_collection
 from bson import ObjectId
 from slugify import slugify
 from dotenv import load_dotenv
