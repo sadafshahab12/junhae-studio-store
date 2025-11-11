@@ -40,6 +40,11 @@ def product_helper(product) -> dict:
     }
 
 
+@app.get("/")
+async def home():
+    return "hellow world"
+
+
 @app.get("/products")
 async def get_products():
     products = []
