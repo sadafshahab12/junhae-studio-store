@@ -40,15 +40,16 @@ const JunhaeEditsPage: React.FC = () => {
 
     switch (sortOption) {
       case "Newest":
-        filtered.sort(
-          (a, b) => (b.newest ? 1 : 0) - (a.newest ? 1 : 0) || a.id - b.id
+        filtered.sort((a, b) =>
+          (Number(b.newest) - Number(a.newest)) ||
+          String(a.id).localeCompare(String(b.id))
+        );
+      case "Bestsellers":
+        filtered.sort((a, b) =>
+          (Number(b.bestseller) - Number(a.bestseller)) ||
+          String(a.id).localeCompare(String(b.id))
         );
         break;
-      case "Bestsellers":
-        filtered.sort(
-          (a, b) =>
-            (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) || a.id - b.id
-        );
         break;
       case "Price: Low to High":
         filtered.sort((a, b) => a.price - b.price);
