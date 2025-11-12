@@ -1,18 +1,25 @@
-import React, { useState, useRef } from "react";
-import { CustomizableProduct, Design } from "../data/types";
+"use client";
+import React, { useRef, useState } from "react";
+import { CustomizableProduct, Design, Patch } from "../data/types";
 import Image from "next/image";
 
 interface DesignCanvasProps {
   product: CustomizableProduct;
   color: { name: string; hex: string };
-  design: Design | null;
-  onDesignChange: (design: Partial<Design>) => void;
+  activeSide: "front" | "back";
+  frontDesign: Design | null;
+  backDesign: Design | null;
+  patches?: Patch[];
+  onDesignChange: (newProps: Partial<Design>, side: "front" | "back") => void;
 }
 
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   product,
   color,
-  design,
+  activeSide,
+  frontDesign,
+  backDesign,
+  patches = [],
   onDesignChange,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -20,40 +27,55 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  const designToShow = activeSide === "front" ? frontDesign : backDesign;
+
+  // Select front/back mockup
   const getProductMockup = () => {
-    // This is a simplified lookup. A real app might have more complex logic.
-    return product.mockups.imageUrl.replace("white", color.name.toLowerCase());
+    if (!product.mockups) return "";
+    const url =
+      activeSide === "front" ? product.mockups.front : product.mockups.back;
+    return url.replace("white", color.name.toLowerCase());
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!design || !designRef.current) return;
+    if (!designToShow || !designRef.current) return;
     setIsDragging(true);
-
-    const designRect = designRef.current.getBoundingClientRect();
+    const rect = designRef.current.getBoundingClientRect();
     setDragStart({
-      x: e.clientX - designRect.left,
-      y: e.clientY - designRect.top,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !design || !canvasRef.current) return;
+    if (!isDragging || !designToShow || !canvasRef.current) return;
 
     const canvasRect = canvasRef.current.getBoundingClientRect();
+    const printable = product.printableArea;
 
+    // Calculate relative position inside printable area
     const newX = e.clientX - canvasRect.left - dragStart.x;
     const newY = e.clientY - canvasRect.top - dragStart.y;
 
-    // Convert pixel values to percentages
-    const newXPercent = (newX / canvasRect.width) * 100;
-    const newYPercent = (newY / canvasRect.height) * 100;
+    const newXPercent =
+      ((newX / canvasRect.width - printable.left / 100) * 100) /
+      (printable.width / 100);
+    const newYPercent =
+      ((newY / canvasRect.height - printable.top / 100) * 100) /
+      (printable.height / 100);
 
-    onDesignChange({ position: { x: newXPercent, y: newYPercent } });
+    onDesignChange(
+      {
+        position: {
+          x: Math.max(0, Math.min(100, newXPercent)),
+          y: Math.max(0, Math.min(100, newYPercent)),
+        },
+      },
+      activeSide
+    );
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   return (
     <div
@@ -63,15 +85,20 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       onMouseLeave={handleMouseUp}
     >
       <div className="relative w-full max-w-lg aspect-4/5" ref={canvasRef}>
+        {/* Shirt Mockup */}
         <Image
-          key={getProductMockup()} // Key helps React re-render the image on change
+          key={getProductMockup()}
           src={getProductMockup()}
           alt={`${product.name} in ${color.name}`}
-          className="w-full h-full object-contain animate-pulse-once"
           width={1000}
           height={1000}
+          className="w-full h-full object-contain"
+          style={{
+            filter: "drop-shadow(0 5px 15px rgba(0,0,0,0.2))",
+          }}
         />
-        {/* Printable Area Visualization (optional, for debugging)  */}
+
+        {/* Printable Area */}
         <div
           className="absolute border-2 border-dashed border-blue-400 pointer-events-none"
           style={{
@@ -82,24 +109,49 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           }}
         />
 
-        {design?.imageUrl && (
+        {/* Design Image */}
+        {designToShow?.imageUrl && (
           <Image
             ref={designRef}
-            src={design.imageUrl}
-            alt="User design"
+            src={designToShow.imageUrl}
+            alt={`${activeSide} design`}
             width={1000}
             height={1000}
             className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
             style={{
-              left: `${design.position.x}%`,
-              top: `${design.position.y}%`,
-              transform: `scale(${design.scale}) rotate(${design.rotation}deg)`,
-              width: `${product.printableArea.width}%`, // Base width on printable area
+              left: `calc(${product.printableArea.left}% + ${
+                designToShow.position.x
+              }% * ${product.printableArea.width / 100})`,
+              top: `calc(${product.printableArea.top}% + ${
+                designToShow.position.y
+              }% * ${product.printableArea.height / 100})`,
+              transform: `scale(${designToShow.scale}) rotate(${designToShow.rotation}deg)`,
+              width: `${product.printableArea.width}%`,
+              boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
             }}
             onMouseDown={handleMouseDown}
             draggable={false}
           />
         )}
+
+        {/* Patches / Decals */}
+        {patches.map((p) => (
+          <Image
+            key={p.id}
+            src={p.imageUrl}
+            alt="Patch"
+            width={1000}
+            height={1000}
+            className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
+            style={{
+              left: `${p.position.x}%`,
+              top: `${p.position.y}%`,
+              transform: `scale(${p.scale}) rotate(${p.rotation}deg)`,
+              width: "10%",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            }}
+          />
+        ))}
       </div>
     </div>
   );

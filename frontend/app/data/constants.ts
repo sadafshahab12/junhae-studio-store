@@ -362,11 +362,11 @@ export const CUSTOMIZABLE_PRODUCTS: CustomizableProduct[] = [
     basePrice: 25.0,
     colors: GARMENT_COLORS,
     mockups: {
-      colorName: "White",
-      imageUrl:
-        "https://img.freepik.com/premium-vector/t-shirt-design-template_135595-7447.jpg",
+      front:
+        "https://static.vecteezy.com/system/resources/previews/070/936/718/non_2x/white-t-shirt-on-transparent-background-free-png.png",
+      back: "https://www.nicepng.com/png/detail/286-2864869_white-t-shirt-png-plain-white-t-shirt.png",
     },
-    printableArea: { width: 35, height: 45, top: 15, left: 32.5 },
+    printableArea: { width: 35, height: 45, top: 28, left: 32.5 },
   },
   {
     id: "hoodie",
@@ -374,25 +374,22 @@ export const CUSTOMIZABLE_PRODUCTS: CustomizableProduct[] = [
     basePrice: 45.0,
     colors: GARMENT_COLORS.filter((c) => c.name !== "Blush"),
     mockups: {
-      colorName: "White",
-      imageUrl:
-        "https://aistudio.google.com/static/prompts/hoodie-mockup-white.png",
+      front: "https://pngimg.com/d/hoodie_PNG4.png",
+      back: "https://pngimg.com/d/hoodie_PNG5.png",
     },
-    printableArea: { width: 33, height: 35, top: 20, left: 33.5 },
+    printableArea: { width: 33, height: 35, top: 27, left: 33.5 },
   },
   {
-    id: "tote",
-    name: "Canvas Tote",
-    basePrice: 18.0,
-    colors: GARMENT_COLORS.filter((c) =>
-      ["White", "Black", "Beige"].includes(c.name)
-    ),
+    id: "sweatshirt",
+    name: "Sweatshirt",
+    basePrice: 30.0,
+    colors: GARMENT_COLORS,
     mockups: {
-      colorName: "White",
-      imageUrl:
-        "https://aistudio.google.com/static/prompts/tote-mockup-white.png",
+      front:
+        "https://img.freepik.com/premium-photo/png-crew-neck-transparent-mockup-unisex-streetwear-apparel_53876-1020648.jpg?semt=ais_hybrid",
+      back: "https://framerusercontent.com/images/nsWoh4IcUBiJz8OLAckpizXBoI.png?width=500&height=500",
     },
-    printableArea: { width: 60, height: 60, top: 20, left: 20 },
+    printableArea: { width: 35, height: 40, top: 25, left: 32.5 },
   },
 ];
 

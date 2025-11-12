@@ -70,26 +70,24 @@ export interface User {
 export interface CustomizableProduct {
   id: string;
   name: string;
-  basePrice: number;
   colors: { name: string; hex: string }[];
-  mockups: {
-    colorName: string;
-    imageUrl: string;
-  };
-  printableArea: {
-    width: number; // percentage of parent
-    height: number; // percentage of parent
-    top: number; // percentage of parent
-    left: number; // percentage of parent
-  };
+  mockups: { front: string; back: string };
+  printableArea: { top: number; left: number; width: number; height: number };
+  basePrice: number;
 }
 
 export interface Design {
   imageUrl: string;
-  position: { x: number; y: number }; // percentages
-  scale: number; // 0.1 to 2
-  rotation: number; // degrees
+  position: { x: number; y: number };
+  scale: number;
+  rotation: number;
+  side?: "front" | "back"; // New: front/back
 }
+
+export interface Patch extends Design {
+  id: string; // Unique ID for multiple patches
+}
+
 export interface Review {
   _id: string;
   author: string;

@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
-import { CustomizableProduct, Design } from "../data/types";
+import { CustomizableProduct, Design, Patch } from "../data/types";
 import { CUSTOMIZABLE_PRODUCTS } from "../data/constants";
 import ArrowRightIcon from "../icons/ArrowRightIcon";
 import DesignCanvas from "../design/DesignCanvas";
@@ -10,27 +10,30 @@ import HowItWorks from "../design/HowItWorks";
 import Toast from "../components/ui/Toast";
 import Link from "next/link";
 
-
 const CreatePage: React.FC = () => {
   const [product, setProduct] = useState<CustomizableProduct>(
     CUSTOMIZABLE_PRODUCTS[0]
   );
   const [color, setColor] = useState(product.colors[0]);
-  const [design, setDesign] = useState<Design | null>(null);
+  const [frontDesign, setFrontDesign] = useState<Design | null>(null);
+  const [backDesign, setBackDesign] = useState<Design | null>(null);
+  const [patches, setPatches] = useState<Patch[]>([]);
+  const [activeSide, setActiveSide] = useState<"front" | "back">("front");
   const [showToast, setShowToast] = useState(false);
 
-  const handleSetProduct = (newProduct: CustomizableProduct) => {
-    setProduct(newProduct);
-    // Reset color if the new product doesn't support the current one
-    if (!newProduct.colors.find((c) => c.hex === color.hex)) {
-      setColor(newProduct.colors[0]);
-    }
+  const handleDesignChange = (
+    newProps: Partial<Design>,
+    side: "front" | "back"
+  ) => {
+    if (side === "front")
+      setFrontDesign((prev) => (prev ? { ...prev, ...newProps } : null));
+    else setBackDesign((prev) => (prev ? { ...prev, ...newProps } : null));
   };
 
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = (file: File, side: "front" | "back") => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      setDesign({
+      const newDesign: Design = {
         imageUrl: e.target?.result as string,
         position: {
           x: product.printableArea.left,
@@ -38,30 +41,45 @@ const CreatePage: React.FC = () => {
         },
         scale: 1,
         rotation: 0,
-      });
+        side,
+      };
+      if (side === "front") setFrontDesign(newDesign);
+      else setBackDesign(newDesign);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDesignChange = (newProps: Partial<Design>) => {
-    if (design) {
-      setDesign({ ...design, ...newProps });
-    }
-  };
-
-  const handleDesignRemove = () => {
-    setDesign(null);
+  const handlePatchUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPatches((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          imageUrl: e.target?.result as string,
+          position: { x: 50, y: 50 },
+          scale: 0.5,
+          rotation: 0,
+        },
+      ]);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddToCart = () => {
-    // In a real app, this would add the configuration to a cart context
     setShowToast(true);
-    console.log("Added to cart:", { product, color, design });
+    console.log("Added to cart:", {
+      product,
+      color,
+      frontDesign,
+      backDesign,
+      patches,
+    });
   };
 
   return (
     <div className="pt-40">
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="py-20 sm:py-24 text-center bg-stone-100 border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 animate-fade-in-up">
@@ -82,24 +100,31 @@ const CreatePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Design Tool */}
+      {/* Designer */}
       <section id="designer" className="bg-white border-b border-gray-200">
         <div className="flex flex-col lg:flex-row min-h-screen">
           <DesignCanvas
             product={product}
             color={color}
-            design={design}
+            activeSide={activeSide}
+            frontDesign={frontDesign}
+            backDesign={backDesign}
+            patches={patches}
             onDesignChange={handleDesignChange}
           />
           <ControlPanel
             product={product}
-            setProduct={handleSetProduct}
+            setProduct={setProduct}
             color={color}
             setColor={setColor}
-            design={design}
+            activeSide={activeSide}
+            setActiveSide={setActiveSide}
+            frontDesign={frontDesign}
+            backDesign={backDesign}
             onDesignChange={handleDesignChange}
             onImageUpload={handleImageUpload}
-            onDesignRemove={handleDesignRemove}
+            patches={patches}
+            onPatchUpload={handlePatchUpload}
             onAddToCart={handleAddToCart}
           />
         </div>

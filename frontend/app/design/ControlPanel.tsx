@@ -1,21 +1,24 @@
-"use client"
+"use client";
 import React, { useRef } from "react";
+import { CustomizableProduct, Design, Patch } from "../data/types";
 import { CUSTOMIZABLE_PRODUCTS } from "../data/constants";
-import CheckIcon from "../icons/CheckIcon";
 import UploadCloudIcon from "../icons/UploadCloudIcon";
 import Trash2Icon from "../icons/Trash2Icon";
 import Slider from "../components/ui/Slider";
-import { CustomizableProduct, Design } from "../data/types";
 
 interface ControlPanelProps {
   product: CustomizableProduct;
   setProduct: (product: CustomizableProduct) => void;
   color: { name: string; hex: string };
   setColor: (color: { name: string; hex: string }) => void;
-  design: Design | null;
-  onDesignChange: (design: Partial<Design>) => void;
-  onImageUpload: (file: File) => void;
-  onDesignRemove: () => void;
+  activeSide: "front" | "back";
+  setActiveSide: (side: "front" | "back") => void;
+  frontDesign: Design | null;
+  backDesign: Design | null;
+  onDesignChange: (newProps: Partial<Design>, side: "front" | "back") => void;
+  onImageUpload: (file: File, side: "front" | "back") => void;
+  patches: Patch[];
+  onPatchUpload: (file: File) => void;
   onAddToCart: () => void;
 }
 
@@ -24,75 +27,78 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   setProduct,
   color,
   setColor,
-  design,
+  activeSide,
+  setActiveSide,
+  frontDesign,
+  backDesign,
   onDesignChange,
   onImageUpload,
-  onDesignRemove,
   onAddToCart,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      onImageUpload(file);
-    }
+    if (file) onImageUpload(file, activeSide);
   };
-
-  const currentProduct = CUSTOMIZABLE_PRODUCTS.find((p) => p.id === product.id);
 
   return (
     <div className="w-full lg:w-1/2 p-4 lg:p-8 bg-gray-50 border-l border-gray-200">
       <div className="max-w-md mx-auto">
-        {/* Product Selection */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">{product.name}</h2>
-          <select
-            value={product.id}
-            onChange={(e) => {
-              const newProduct = CUSTOMIZABLE_PRODUCTS.find(
-                (p) => p.id === e.target.value
-              );
-              if (newProduct) setProduct(newProduct);
-            }}
-            className="mt-2 w-full p-2 border border-gray-300 rounded-md bg-white"
+        <h2 className="text-2xl font-bold text-gray-800">{product.name}</h2>
+
+        {/* Product Select */}
+        <select
+          value={product.id}
+          onChange={(e) => {
+            const newProduct = CUSTOMIZABLE_PRODUCTS.find(
+              (p) => p.id === e.target.value
+            );
+            if (newProduct) setProduct(newProduct);
+          }}
+          className="mt-2 w-full p-2 border border-gray-300 rounded-md bg-white"
+        >
+          {CUSTOMIZABLE_PRODUCTS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Side Toggle */}
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={() => setActiveSide("front")}
+            className={`px-3 py-1 rounded ${
+              activeSide === "front" ? "bg-gray-900 text-white" : "bg-gray-200"
+            }`}
           >
-            {CUSTOMIZABLE_PRODUCTS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            Front
+          </button>
+          <button
+            onClick={() => setActiveSide("back")}
+            className={`px-3 py-1 rounded ${
+              activeSide === "back" ? "bg-gray-900 text-white" : "bg-gray-200"
+            }`}
+          >
+            Back
+          </button>
         </div>
 
         {/* Color Picker */}
         <div className="mt-6">
-          <label className="text-sm font-medium text-gray-700">
-            Color: {color.name}
+          <label className="text-sm font-medium text-gray-700 mb-1">
+            Pick Shirt Color
           </label>
-          <div className="mt-2 flex items-center gap-2 flex-wrap">
-            {currentProduct?.colors.map((c) => (
-              <button
-                key={c.hex}
-                onClick={() => setColor(c)}
-                className="w-8 h-8 rounded-full border-2 transition-all"
-                style={{
-                  backgroundColor: c.hex,
-                  borderColor: color.hex === c.hex ? "#111827" : "transparent",
-                }}
-              >
-                {color.hex === c.hex && (
-                  <CheckIcon
-                    className="w-4 h-4 mx-auto"
-                    style={{ stroke: c.name === "Black" ? "white" : "black" }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+          <input
+            type="color"
+            value={color.hex}
+            onChange={(e) => setColor({ name: "Custom", hex: e.target.value })}
+            className="w-16 h-10 border border-gray-300 rounded-md cursor-pointer"
+          />
         </div>
 
-        {/* Design Upload */}
+        {/* Upload Design */}
         <div className="mt-6">
           <input
             type="file"
@@ -113,14 +119,15 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           </button>
         </div>
 
-        {design && (
+        {/* Customize Design */}
+        {(activeSide === "front" ? frontDesign : backDesign) && (
           <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-white space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-gray-800">
                 Customize Your Design
               </h3>
               <button
-                onClick={onDesignRemove}
+                onClick={() => onDesignChange({}, activeSide)}
                 className="text-gray-400 hover:text-red-600"
               >
                 <Trash2Icon className="w-5 h-5" />
@@ -131,9 +138,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               min="0.5"
               max="1.5"
               step="0.01"
-              value={design.scale}
+              value={
+                activeSide === "front"
+                  ? frontDesign?.scale || 1
+                  : backDesign?.scale || 1
+              }
               onChange={(e) =>
-                onDesignChange({ scale: parseFloat(e.target.value) })
+                onDesignChange(
+                  { scale: parseFloat(e.target.value) },
+                  activeSide
+                )
               }
             />
             <Slider
@@ -141,9 +155,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               min="-180"
               max="180"
               step="1"
-              value={design.rotation}
+              value={
+                activeSide === "front"
+                  ? frontDesign?.rotation || 0
+                  : backDesign?.rotation || 0
+              }
               onChange={(e) =>
-                onDesignChange({ rotation: parseInt(e.target.value) })
+                onDesignChange(
+                  { rotation: parseInt(e.target.value) },
+                  activeSide
+                )
               }
             />
           </div>
@@ -173,19 +194,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           </div>
         </div>
 
-        {/* Add to Cart */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold text-gray-900">
-              ${product.basePrice.toFixed(2)}
-            </span>
-            <button
-              onClick={onAddToCart}
-              className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-700 transition-colors"
-            >
-              Add to Cart
-            </button>
-          </div>
+        {/* Price & Add to Cart */}
+        <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+          <span className="text-2xl font-bold text-gray-900">
+            ${product.basePrice.toFixed(2)}
+          </span>
+          <button
+            onClick={onAddToCart}
+            className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-700 transition-colors"
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </div>
