@@ -1,6 +1,7 @@
-fastapi[standard]==0.113.0
+
 uvicorn==0.30.6
 python-slugify==8.0.4
 python-dotenv==1.0.1
 pymongo==4.9.1
 motor==3.5.1
+fastapi==0.117.1

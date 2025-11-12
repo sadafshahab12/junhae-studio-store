@@ -3,12 +3,10 @@ name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "python-dotenv>=1.2.1",
     "uvicorn[standard]>=0.38.0",
-    "motor>=3.1.1",
-    "python-dotenv>=1.2.1",
     "python-slugify>=8.0.1",
-    "pymongo>=4.5.0",
+    "fastapi>=0.117.1",
 ]
