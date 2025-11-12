@@ -18,6 +18,7 @@ export interface Product {
   newest?: boolean;
   bestseller?: boolean;
   stock?: number;
+  colors?: string[];
 }
 export interface Article {
   id: number;

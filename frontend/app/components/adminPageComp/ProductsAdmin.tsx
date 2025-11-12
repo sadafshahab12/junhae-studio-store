@@ -21,6 +21,7 @@ interface ProductFormData {
   galleryImages: string[];
   details: string[];
   sizeGuide: { size: string; chest: string; length: string }[];
+  colors: string[]; // <-- NEW FIELD
 }
 
 // Helper function to calculate the initial form data based on the 'product' prop
@@ -38,6 +39,7 @@ const getInitialFormData = (product?: Product): ProductFormData => ({
   galleryImages: product?.galleryImages || [],
   details: product?.details || [],
   sizeGuide: product?.sizeGuide || [],
+  colors: product?.colors || [],
 });
 
 const AddProductModal: React.FC<{
@@ -51,6 +53,7 @@ const AddProductModal: React.FC<{
   const [formData, setFormData] = useState<ProductFormData>(() =>
     getInitialFormData(product)
   );
+  const [newColor, setNewColor] = useState("");
 
   const [newDetail, setNewDetail] = useState("");
   const [newSizeGuide, setNewSizeGuide] = useState({
@@ -168,6 +171,23 @@ const AddProductModal: React.FC<{
     setFormData({
       ...formData,
       galleryImages: formData.galleryImages.filter((_, i) => i !== index),
+    });
+  };
+
+  const addColor = () => {
+    if (newColor.trim() && !formData.colors.includes(newColor.trim())) {
+      setFormData({
+        ...formData,
+        colors: [...formData.colors, newColor.trim()],
+      });
+      setNewColor("");
+    }
+  };
+
+  const removeColor = (index: number) => {
+    setFormData({
+      ...formData,
+      colors: formData.colors.filter((_, i) => i !== index),
     });
   };
 
@@ -412,6 +432,49 @@ const AddProductModal: React.FC<{
                 </li>
               ))}
             </ul>
+          </div>
+          {/* available color  */}
+          {/* Colors */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Available Colors
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={newColor}
+                onChange={(e) => setNewColor(e.target.value)}
+                placeholder="Add a color (e.g., Red)"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addColor())
+                }
+              />
+              <button
+                type="button"
+                onClick={addColor}
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.colors.map((color, idx) => (
+                <span
+                  key={idx}
+                  className="flex items-center px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
+                >
+                  {color}
+                  <button
+                    type="button"
+                    onClick={() => removeColor(idx)}
+                    className="ml-2 text-red-600 hover:text-red-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Size Guide */}

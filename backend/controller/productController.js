@@ -16,6 +16,7 @@ export const createProduct = async (req, res) => {
       newest,
       bestseller,
       stock,
+      colors
     } = req.body;
 
     // Basic validation
@@ -38,6 +39,7 @@ export const createProduct = async (req, res) => {
       newest,
       bestseller,
       stock,
+      colors
     });
 
     const savedProduct = await newProduct.save();

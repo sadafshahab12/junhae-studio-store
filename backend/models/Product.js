@@ -21,6 +21,7 @@ const productSchema = new mongoose.Schema(
     newest: { type: Boolean, default: false },
     bestseller: { type: Boolean, default: false },
     stock: { type: Number, default: 0 },
+    colors: [String],
   },
   { timestamps: true }
 );

@@ -21,10 +21,21 @@ const ProductDetailPage: React.FC = () => {
   const { products, getProductBySlug } = useProduct();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("M");
-  const [selectedColor, setSelectedColor] = useState("Default");
+  const [selectedColor, setSelectedColor] = useState(
+    product?.colors?.[0] || "Default"
+  );
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const colorSelection = async () => {
+      if (product?.colors && product.colors.length > 0) {
+        setSelectedColor(product.colors[0]);
+      }
+    };
+    colorSelection();
+  }, [product]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -116,7 +127,7 @@ const ProductDetailPage: React.FC = () => {
                 Select Color
               </h3>
               <div className="mt-2 flex gap-2">
-                {["Default", "Black", "White", "Gray"].map((color) => (
+                {product.colors?.map((color) => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
