@@ -44,8 +44,8 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`
         );
         if (!res.ok) throw new Error("Failed to fetch products");
-        const data: Product[] = await res.json();
-        setProducts(data);
+        const data = await res.json();
+        setProducts(data.products);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -54,7 +54,7 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
     };
     fetchProducts();
   }, []);
-
+  // console.log("Products",products)
   const addProduct = async (product: Product) => {
     try {
       // FIX 1: Destructure out the client-side 'id'.

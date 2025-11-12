@@ -7,9 +7,10 @@ import ProductCard from "../components/shopPageComp/ProductCard";
 import ArrowRightIcon from "../icons/ArrowRightIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Product } from "../data/types";
 
 const JunhaeEditsPage: React.FC = () => {
-  const { products: PRODUCTS } = useProduct();
+  const { products } = useProduct();
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortOption, setSortOption] = useState("Newest");
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -31,25 +32,27 @@ const JunhaeEditsPage: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  // console.log("junhae edits ", products)
   const displayedProducts = useMemo(() => {
     const filtered =
       activeCategory === "All"
-        ? [...PRODUCTS]
-        : PRODUCTS.filter((p) => p.category === activeCategory);
+        ? [...products]
+        : products.filter((p) => p.category === activeCategory);
 
     switch (sortOption) {
       case "Newest":
-        filtered.sort((a, b) =>
-          (Number(b.newest) - Number(a.newest)) ||
-          String(a.id).localeCompare(String(b.id))
-        );
-      case "Bestsellers":
-        filtered.sort((a, b) =>
-          (Number(b.bestseller) - Number(a.bestseller)) ||
-          String(a.id).localeCompare(String(b.id))
-        );
+        filtered.sort((a, b) => {
+          const diff = (b.newest ? 1 : 0) - (a.newest ? 1 : 0);
+          if (diff !== 0) return diff;
+          return Number(a.id) - Number(b.id);
+        });
         break;
+      case "Bestsellers":
+        filtered.sort((a, b) => {
+          const diff = (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0);
+          if (diff !== 0) return diff;
+          return Number(a.id) - Number(b.id);
+        });
         break;
       case "Price: Low to High":
         filtered.sort((a, b) => a.price - b.price);
@@ -60,7 +63,7 @@ const JunhaeEditsPage: React.FC = () => {
     }
 
     return filtered;
-  }, [PRODUCTS, activeCategory, sortOption]);
+  }, [products, activeCategory, sortOption]);
 
   const handleSortChange = (option: string) => {
     setSortOption(option);
@@ -169,8 +172,8 @@ const JunhaeEditsPage: React.FC = () => {
       <section className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {displayedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {displayedProducts.map((product: Product, index: number) => (
+              <ProductCard key={index} product={product} />
             ))}
           </div>
         </div>

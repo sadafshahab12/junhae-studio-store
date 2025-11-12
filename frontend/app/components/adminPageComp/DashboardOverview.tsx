@@ -1,5 +1,5 @@
 "use client";
-import React, { useState} from "react";
+import React, { useState } from "react";
 import StatCard from "./StatCard";
 import { CUSTOMERS } from "@/app/data/constants";
 import { CartItem } from "@/app/data/types";
@@ -15,7 +15,6 @@ const DashboardOverview: React.FC = () => {
   const { orders, getTotalSales } = useOrder();
   const { products } = useProduct();
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    void setCartItems
     try {
       const storedCart = localStorage.getItem("junhaeCart");
       return storedCart ? JSON.parse(storedCart) : [];
@@ -26,7 +25,6 @@ const DashboardOverview: React.FC = () => {
   });
 
   const [cartTotal, setCartTotal] = useState(() => {
-    void setCartTotal;
     try {
       const storedCart = localStorage.getItem("junhaeCart");
       if (storedCart) {
