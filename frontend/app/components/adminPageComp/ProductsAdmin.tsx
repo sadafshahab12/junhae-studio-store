@@ -639,9 +639,9 @@ const ProductsAdmin: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {products.map((product, index) => (
               <tr
-                key={product.id}
+                key={index}
                 className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
