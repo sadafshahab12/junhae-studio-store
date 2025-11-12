@@ -1,0 +1,5 @@
+import React from 'react';
+const PinterestIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" {...props}><path d="M12.17 10.52c-1.4 0-2.42.8-2.42 2.15 0 1.05.6 1.86 1.6 1.86 1.3 0 1.95-1.37 1.95-2.58 0-1.88-1.25-3.2-3.14-3.2-2.3 0-4.05 1.7-4.05 3.82 0 1.45.8 2.65 2.1 2.65.6 0 1.25-.4 1.25-.95 0-.7-.45-1.4-.45-1.4s-.2-1 .6-1c1 0 1.65 1.2 1.65 2.5 0 2.2-1.3 3.8-3.3 3.8-2.6 0-4.9-1.9-4.9-4.9 0-2.85 2.2-5.4 5.3-5.4 2.8 0 4.5 2 4.5 4.15 0 .8-.15 1.55-.4 2.15l-.1.45c-.1.45.1.85.5.85.8 0 1.25-1.5 1.25-2.3 0-1.8-1-3.1-2.9-3.1a2.25 2.25 0 0 0-2.3 2.15c0 .35.05.7.2.95.1.25.05.45-.1.65-.2.25-.4.35-.6.35zM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path></svg>
+);
+export default PinterestIcon;
