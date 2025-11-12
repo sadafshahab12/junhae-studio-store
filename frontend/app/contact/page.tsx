@@ -22,15 +22,40 @@ const ContactPage: React.FC = () => {
     setFormState((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would handle the form submission (e.g., send an email or API request).
-    console.log("Form submitted:", formState);
-    setIsSubmitted(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/contact`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formState),
+        }
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSubmitted(true);
+        setFormState({
+          name: "",
+          email: "",
+          subject: "General Inquiry",
+          message: "",
+        });
+      } else {
+        alert("Something went wrong. Try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error. Try again later.");
+    }
   };
 
   return (
-    <div className="bg-white pt-16 font-sans">
+    <div className="bg-white pt-40 font-sans">
       <div className="pt-16 sm:pt-24 pb-20  ">
         {/* Hero Section */}
         <div className="text-center container mx-auto px-4 sm:px-6 lg:px-8">
