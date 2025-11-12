@@ -1,3 +1,4 @@
+"use client";
 import { Review } from "@/app/data/types";
 import StarIcon from "@/app/icons/StarIcon";
 import Image from "next/image";
@@ -19,65 +20,65 @@ export const Reviews: React.FC<ReviewsProps> = ({
     text: "",
     author: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const averageRating =
     reviews.length > 0
       ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
       : 0;
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  // ✅ Fetch reviews from backend
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/reviews/${productId}`
+        );
+        const data = await res.json();
+        setReviews(data);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      }
+    };
+    fetchReviews();
+  }, [productId]);
+
+  // ✅ Submit new review to backend
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReview.text.trim() || !newReview.author.trim()) {
       alert("Please fill in all fields");
       return;
     }
 
-    const review: Review = {
-      id: reviews.length + 1,
+    setLoading(true);
+    const reviewData = {
+      productId,
       author: newReview.author,
-      avatarUrl:
-        "https://ui-avatars.com/api/?name=" +
-        encodeURIComponent(newReview.author),
       rating: newReview.rating,
-      date: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
       text: newReview.text,
     };
 
-    setReviews([...reviews, review]);
-    setNewReview({ rating: 5, text: "", author: "" });
-    setShowReviewForm(false);
-
-    // Save to localStorage
-    const storedReviews = localStorage.getItem(`product_${productId}_reviews`);
-    const allReviews = storedReviews ? JSON.parse(storedReviews) : [];
-    allReviews.push(review);
-    localStorage.setItem(
-      `product_${productId}_reviews`,
-      JSON.stringify(allReviews)
-    );
-  };
-
-  useEffect(() => {
-    // Load saved reviews from localStorage
-    const reviews = async () => {
-      const storedReviews = localStorage.getItem(
-        `product_${productId}_reviews`
-      );
-      if (storedReviews) {
-        try {
-          const parsed = JSON.parse(storedReviews);
-          setReviews([...initialReviews, ...parsed]);
-        } catch (error) {
-          console.error("Failed to load reviews", error);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reviewData),
         }
-      }
-    };
-    reviews();
-  }, [productId, initialReviews]);
+      );
+
+      const savedReview = await res.json();
+      setReviews((prev) => [...prev, savedReview]);
+      setNewReview({ rating: 5, text: "", author: "" });
+      setShowReviewForm(false);
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="py-16 sm:py-24 border-t border-gray-200">
@@ -127,7 +128,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
                   >
                     <StarIcon
                       filled={rating <= newReview.rating}
-                      className="text-yellow-400 w-6 h-6"
+                      className="text-yellow-400 w-4 h-4 sm:w-5 sm:h-5"
                     />
                   </button>
                 ))}
@@ -149,9 +150,10 @@ export const Reviews: React.FC<ReviewsProps> = ({
             </div>
             <button
               type="submit"
+              disabled={loading}
               className="px-6 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-700 transition-colors text-sm font-medium"
             >
-              Submit Review
+              {loading ? "Submitting..." : "Submit Review"}
             </button>
           </form>
         )}
@@ -162,7 +164,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
               <StarIcon
                 key={i}
                 filled={i < Math.round(averageRating)}
-                className="text-yellow-400"
+                className="text-yellow-400 w-4 h-4"
               />
             ))}
           </div>
@@ -181,11 +183,14 @@ export const Reviews: React.FC<ReviewsProps> = ({
             </p>
           ) : (
             reviews.map((review) => (
-              <div key={review.id} className="flex flex-col sm:flex-row gap-6">
+              <div key={review._id} className="flex flex-col sm:flex-row gap-6">
                 <div className="shrink-0">
                   <Image
                     className="h-12 w-12 rounded-full object-cover"
-                    src={review.avatarUrl}
+                    src={
+                      review.avatarUrl ||
+                      "https://ui-avatars.com/api/?name=User"
+                    }
                     alt={review.author}
                     width={1000}
                     height={1000}
@@ -197,7 +202,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
                       <StarIcon
                         key={i}
                         filled={i < review.rating}
-                        className="text-yellow-400"
+                        className="text-yellow-400 w-4 h-4"
                       />
                     ))}
                   </div>
@@ -205,7 +210,9 @@ export const Reviews: React.FC<ReviewsProps> = ({
                   <p className="mt-4 text-sm font-medium text-gray-900">
                     {review.author}
                   </p>
-                  <p className="text-sm text-gray-500">{review.date}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(review.date).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             ))

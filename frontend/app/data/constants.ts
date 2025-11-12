@@ -395,32 +395,7 @@ export const CUSTOMIZABLE_PRODUCTS: CustomizableProduct[] = [
     printableArea: { width: 60, height: 60, top: 20, left: 20 },
   },
 ];
-export const REVIEWS: Review[] = [
-  {
-    id: 1,
-    author: "Alex Johnson",
-    avatarUrl: "https://i.pravatar.cc/150?u=alex",
-    rating: 5,
-    date: "2023-10-15",
-    text: "Absolutely love this hoodie! The material is so soft and the print quality is amazing. It's my new favorite piece of clothing. Worth every penny.",
-  },
-  {
-    id: 2,
-    author: "Samantha Bee",
-    avatarUrl: "https://i.pravatar.cc/150?u=samantha",
-    rating: 5,
-    date: "2023-10-12",
-    text: "The fit is perfect and it feels so premium. I've already gotten so many compliments on it. Will definitely be buying from Junhae Studio again.",
-  },
-  {
-    id: 3,
-    author: "Chris Nolan",
-    avatarUrl: "https://i.pravatar.cc/150?u=chris",
-    rating: 4,
-    date: "2023-10-09",
-    text: "Great quality hoodie. I wish there were more color options available for this design, but the black is classic. The fabric is comfortable and warm.",
-  },
-];
+
 const author: Author = {
   name: "Hana Kim",
   avatarUrl: "https://i.pravatar.cc/150?u=hana-kim",

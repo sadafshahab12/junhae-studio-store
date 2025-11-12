@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import Button from "@/app/components/ui/Button";
 import Input from "@/app/components/ui/Input";
 import { useAuth } from "@/app/context/AuthContext";
@@ -6,6 +6,7 @@ import GoogleIcon from "@/app/icons/GoogleIcon";
 import LockIcon from "@/app/icons/LockIcon";
 import MailIcon from "@/app/icons/MailIcon";
 import AuthLayout from "@/app/layout/AuthLayout";
+import Link from "next/link";
 import React, { useState } from "react";
 
 const LoginPage: React.FC = () => {
@@ -67,16 +68,16 @@ const LoginPage: React.FC = () => {
 
         <div className="flex items-center justify-end">
           <div className="text-sm">
-            <a
+            <Link
               href="#"
               className="font-medium text-gray-800 hover:text-gray-600"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
         </div>
 
-        <div>
+        <div className="cursor-pointer">
           <Button type="submit" isLoading={loading} variant="primary">
             Sign In
           </Button>
@@ -105,12 +106,12 @@ const LoginPage: React.FC = () => {
 
       <p className="mt-8 text-center text-sm text-gray-600">
         Not a member?{" "}
-        <a
-          href="#signup"
+        <Link
+          href="/auth/signup"
           className="font-medium text-gray-800 hover:text-gray-600"
         >
           Create an account
-        </a>
+        </Link>
       </p>
     </AuthLayout>
   );

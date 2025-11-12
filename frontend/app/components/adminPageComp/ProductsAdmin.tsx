@@ -720,7 +720,9 @@ const ProductsAdmin: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">{product.category}</td>
-                <td className="px-6 py-4">${product.price.toFixed(2)}</td>
+                <td className="px-6 py-4">
+                  ${(product.price ?? 0).toFixed(2)}
+                </td>
                 <td className="px-6 py-4">
                   {getStockStatus(product.stock || 0)}
                 </td>

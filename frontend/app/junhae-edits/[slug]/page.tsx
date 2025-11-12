@@ -3,7 +3,6 @@ import AccordionItem from "@/app/components/productDetailPageComp/AccordionItem"
 import ImageGallery from "@/app/components/productDetailPageComp/ImageGallery";
 import ProductCard from "@/app/components/shopPageComp/ProductCard";
 import Toast from "@/app/components/ui/Toast";
-import { REVIEWS } from "@/app/data/constants";
 import { useProduct } from "@/app/context/ProductContext";
 import { Product, CartItem } from "@/app/data/types";
 import MinusIcon from "@/app/icons/MinusIcon";
@@ -59,9 +58,27 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const relatedProducts = product
+    ? (() => {
+        const matches = products.filter(
+          (p) =>
+            p.category?.trim().toLowerCase() ===
+              product.category?.trim().toLowerCase() && p._id !== product.id
+        );
+        if (matches.length <= 4) return matches;
+        // Deterministic "shuffle": compute a seed from the product id and rotate the list.
+        const seed = String(product.id || "")
+          .split("")
+          .reduce((s, ch) => s + ch.charCodeAt(0), 0);
+        const start = seed % matches.length;
+        const result: typeof matches = [];
+        for (let i = 0; i < Math.min(4, matches.length); i++) {
+          result.push(matches[(start + i) % matches.length]);
+        }
+        return result;
+      })()
+    : [];
+
   const sizes = ["S", "M", "L", "XL"];
 
   const handleAddToCart = () => {
@@ -221,7 +238,7 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </main>
 
-      <Reviews reviews={REVIEWS} productId={product.id} />
+      <Reviews reviews={[]} productId={product._id || ""} />
 
       {/* Related Products */}
       <section className="py-16 sm:py-24 bg-stone-50 border-t border-gray-200">
@@ -230,8 +247,8 @@ const ProductDetailPage: React.FC = () => {
             You May Also Like
           </h2>
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-            {relatedProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {relatedProducts.map((p, index) => (
+              <ProductCard key={index} product={p} />
             ))}
           </div>
         </div>

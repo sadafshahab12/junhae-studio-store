@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 
 import Link from "next/link";
@@ -85,7 +85,7 @@ const Signup: React.FC = () => {
 
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
-        <div>
+        <div className="cursor-pointer">
           <Button type="submit" isLoading={loading} variant="primary">
             Create Account
           </Button>
@@ -95,7 +95,7 @@ const Signup: React.FC = () => {
       <p className="mt-8 text-center text-sm text-gray-600">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href="/auth/login"
           className="font-medium text-gray-800 hover:text-gray-600"
         >
           Sign in

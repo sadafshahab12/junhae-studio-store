@@ -6,7 +6,7 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-50">
       <div className="text-center mb-8">
         <a href="#login" className="text-2xl font-bold tracking-wider text-gray-900">
             JUNHAE STUDIO

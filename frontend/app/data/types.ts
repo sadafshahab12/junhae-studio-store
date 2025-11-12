@@ -4,6 +4,7 @@ export interface Collection {
   imageUrl: string;
 }
 export interface Product {
+  _id?: string;
   id: string;
   slug: string;
   name: string;
@@ -90,7 +91,7 @@ export interface Design {
   rotation: number; // degrees
 }
 export interface Review {
-  id: number;
+  _id: string;
   author: string;
   avatarUrl: string;
   rating: number;
