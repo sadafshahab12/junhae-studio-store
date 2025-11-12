@@ -14,7 +14,7 @@ import Link from "next/link";
 const DashboardOverview: React.FC = () => {
   const { orders, getTotalSales } = useOrder();
   const { products } = useProduct();
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => { 
     try {
       const storedCart = localStorage.getItem("junhaeCart");
       return storedCart ? JSON.parse(storedCart) : [];
