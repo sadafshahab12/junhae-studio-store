@@ -10,13 +10,14 @@ import { CATEGORIES } from "../data/constants";
 import ChevronDownIcon from "../icons/ChevronDownIcon";
 import { Product } from "../data/types";
 import ArrowRightIcon from "../icons/ArrowRightIcon";
-
+import ProductLoader from "../components/ui/ProductLoader";
 
 const JunhaeEditsPage: React.FC = () => {
   const { products } = useProduct();
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortOption, setSortOption] = useState("Newest");
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const sortRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const sortOptions = [
@@ -25,6 +26,19 @@ const JunhaeEditsPage: React.FC = () => {
     "Price: Low to High",
     "Price: High to Low",
   ];
+
+  // Loader with minimum timer
+  useEffect(() => {
+    const loader = async () => {
+      if (!products) return;
+      setLoading(true);
+    };
+    loader();
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // show loader at least 1.5s
+    return () => clearTimeout(timer);
+  }, [products]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,7 +49,7 @@ const JunhaeEditsPage: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  // console.log("junhae edits ", products)
+
   const displayedProducts = useMemo(() => {
     const filtered =
       activeCategory === "All"
@@ -174,11 +188,15 @@ const JunhaeEditsPage: React.FC = () => {
 
       <section className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {displayedProducts.map((product: Product, index: number) => (
-              <ProductCard key={index} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <ProductLoader text="Loading products for you..." />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+              {displayedProducts.map((product: Product, index: number) => (
+                <ProductCard key={index} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
