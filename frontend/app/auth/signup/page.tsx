@@ -2,13 +2,13 @@
 import React, { useState } from "react";
 
 import Link from "next/link";
-import { useAuth } from "@/app/context/AuthContext";
-import Input from "@/app/components/ui/Input";
+import Input from "@/app/(public)/components/ui/Input";
 import UserIcon from "@/app/icons/UserIcon";
 import AuthLayout from "@/app/layout/AuthLayout";
-import Button from "@/app/components/ui/Button";
+import Button from "@/app/(public)/components/ui/Button";
 import MailIcon from "@/app/icons/MailIcon";
 import LockIcon from "@/app/icons/LockIcon";
+import { useAuth } from "@/app/context/AuthContext";
 
 const Signup: React.FC = () => {
   const [name, setName] = useState("");

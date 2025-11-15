@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import {  Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
-import Header from "./components/homePageComp/Header";
-import Footer from "./components/homePageComp/Footer";
+
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { OrderProvider } from "./context/OrderContext";
 import { ProductProvider } from "./context/ProductContext";
+import Header from "./components/homePageComp/Header";
+import Footer from "./components/homePageComp/Footer";
 
 const outfit = Outfit({
   weight: ["400", "700"],

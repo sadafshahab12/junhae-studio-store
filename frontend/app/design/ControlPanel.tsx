@@ -6,6 +6,7 @@ import UploadCloudIcon from "../icons/UploadCloudIcon";
 import Trash2Icon from "../icons/Trash2Icon";
 import Slider from "../components/ui/Slider";
 
+
 interface ControlPanelProps {
   product: CustomizableProduct;
   setProduct: (product: CustomizableProduct) => void;

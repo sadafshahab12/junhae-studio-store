@@ -1,8 +1,5 @@
 "use client";
-import AccordionItem from "@/app/components/productDetailPageComp/AccordionItem";
-import ImageGallery from "@/app/components/productDetailPageComp/ImageGallery";
-import ProductCard from "@/app/components/shopPageComp/ProductCard";
-import Toast from "@/app/components/ui/Toast";
+
 import { useProduct } from "@/app/context/ProductContext";
 import { Product, CartItem } from "@/app/data/types";
 import MinusIcon from "@/app/icons/MinusIcon";
@@ -11,7 +8,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import Link from "next/link";
+import ImageGallery from "@/app/components/productDetailPageComp/ImageGallery";
+import AccordionItem from "@/app/components/productDetailPageComp/AccordionItem";
 import { Reviews } from "@/app/components/productDetailPageComp/Reviews";
+import Toast from "@/app/components/ui/Toast";
+import ProductCard from "@/app/components/shopPageComp/ProductCard";
 
 const ProductDetailPage: React.FC = () => {
   const params = useParams();
@@ -38,17 +39,20 @@ const ProductDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!products.length) return; // Wait for products to load
+
       const slug = params.slug as string;
       const foundProduct = getProductBySlug(slug);
-      if (foundProduct) {
-        setProduct(foundProduct);
-      } else {
+
+      if (!foundProduct) {
         router.push("/junhae-edits");
+      } else {
+        setProduct(foundProduct);
       }
       setIsLoading(false);
     };
     fetchProduct();
-  }, [params.slug, router, getProductBySlug]);
+  }, [params.slug, products, router, getProductBySlug]);
 
   if (isLoading || !product) {
     return (

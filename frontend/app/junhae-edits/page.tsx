@@ -1,13 +1,16 @@
 "use client";
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { CATEGORIES } from "../data/constants";
-import { useProduct } from "../context/ProductContext";
-import ChevronDownIcon from "../icons/ChevronDownIcon";
+
 import ProductCard from "../components/shopPageComp/ProductCard";
-import ArrowRightIcon from "../icons/ArrowRightIcon";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useProduct } from "../context/ProductContext";
+import { CATEGORIES } from "../data/constants";
+import ChevronDownIcon from "../icons/ChevronDownIcon";
 import { Product } from "../data/types";
+import ArrowRightIcon from "../icons/ArrowRightIcon";
+
 
 const JunhaeEditsPage: React.FC = () => {
   const { products } = useProduct();

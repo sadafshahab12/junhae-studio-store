@@ -1,9 +1,9 @@
-import Newsletter from "@/app/components/homePageComp/Newsletter";
-import ArticleContent from "@/app/components/singleBlogPageComp/ArticleContent";
-import AuthorBio from "@/app/components/singleBlogPageComp/AuthorBio";
-import BlogPostHero from "@/app/components/singleBlogPageComp/BlogPostHero";
-import Comments from "@/app/components/singleBlogPageComp/Comments";
-import RelatedPosts from "@/app/components/singleBlogPageComp/RelatedPosts";
+import Newsletter from "@/app/(public)/components/homePageComp/Newsletter";
+import ArticleContent from "@/app/(public)/components/singleBlogPageComp/ArticleContent";
+import AuthorBio from "@/app/(public)/components/singleBlogPageComp/AuthorBio";
+import BlogPostHero from "@/app/(public)/components/singleBlogPageComp/BlogPostHero";
+import Comments from "@/app/(public)/components/singleBlogPageComp/Comments";
+import RelatedPosts from "@/app/(public)/components/singleBlogPageComp/RelatedPosts";
 import { blogPost } from "@/app/data/constants";
 import React from "react";
 

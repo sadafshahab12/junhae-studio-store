@@ -1,5 +1,11 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { CartItem } from "@/app/data/types";
 
 interface CartContextType {
@@ -10,6 +16,7 @@ interface CartContextType {
   clearCart: () => void;
   getCartTotal: () => number;
   getCartItemCount: () => number;
+  isLoaded: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,17 +31,22 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    try {
-      const storedCart = localStorage.getItem("junhaeCart");
-      if (storedCart) {
-        setCart(JSON.parse(storedCart));
+    const loadCart = async () => {
+      try {
+        const storedCart = localStorage.getItem("junhaeCart");
+        if (storedCart) {
+          setCart(JSON.parse(storedCart));
+        }
+      } catch (error) {
+        console.error("Failed to load cart from localStorage", error);
+        localStorage.removeItem("junhaeCart");
       }
-    } catch (error) {
-      console.error("Failed to load cart from localStorage", error);
-      localStorage.removeItem("junhaeCart");
-    } finally {
-      setIsLoaded(true);
-    }
+
+      // Ensure loader is visible for at least 1.5s
+      setTimeout(() => setIsLoaded(true), 1500);
+    };
+
+    loadCart();
   }, []);
 
   // Save cart to localStorage whenever it changes
@@ -46,22 +58,30 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const addToCart = (item: CartItem) => {
     setCart((prevCart) => {
-      // Check if item with same id, size, and color already exists
+      // Find existing item with same id, size, and color
       const existingItemIndex = prevCart.findIndex(
         (cartItem) =>
-          cartItem.id === item.id &&
+          cartItem.id === item.id && // just id is enough if unique
           cartItem.size === item.size &&
           cartItem.color === item.color
       );
 
       if (existingItemIndex >= 0) {
-        // Update quantity if item exists
+        // Merge quantities without creating duplicates
         const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity += item.quantity;
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + item.quantity,
+          // Ensure all details are up-to-date
+          name: item.name,
+          price: item.price,
+          imageUrl: item.imageUrl,
+          description: item.description,
+        };
         return updatedCart;
       } else {
-        // Add new item
-        return [...prevCart, item];
+        // Add new item with all details
+        return [...prevCart, { ...item }];
       }
     });
   };
@@ -76,9 +96,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return;
     }
     setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      )
+      prevCart.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
@@ -102,6 +120,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     clearCart,
     getCartTotal,
     getCartItemCount,
+    isLoaded,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -114,4 +133,3 @@ export const useCart = () => {
   }
   return context;
 };
-

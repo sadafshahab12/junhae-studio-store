@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import InstagramIcon from "../icons/InstagramIcon";
-import PinterestIcon from "../icons/PinterestIcon";
-import TikTokIcon from "../icons/TikTokIcon";
+import InstagramIcon from "../../icons/InstagramIcon";
+import PinterestIcon from "../../icons/PinterestIcon";
+import TikTokIcon from "../../icons/TikTokIcon";
 
 const ContactPage: React.FC = () => {
   const [formState, setFormState] = useState({

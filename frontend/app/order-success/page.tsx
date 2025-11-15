@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import CheckCircleIcon from "../icons/CheckCircleIcon";
 
+
 const OrderSuccessContent: React.FC = () => {
   const searchParams = useSearchParams();
   const total = searchParams.get("total") || "0.00";

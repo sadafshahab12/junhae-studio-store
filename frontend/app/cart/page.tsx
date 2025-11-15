@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import RecommendedProducts from "../components/cartPageComp/RecommendedProducts";
 import EmptyCart from "../components/cartPageComp/EmptyCart";
-import MinusIcon from "../icons/MinusIcon";
-import PlusIcon from "../icons/PlusIcon";
-import TrashIcon from "../icons/TrashIcon";
 import { useCart } from "../context/CartContext";
+import MinusIcon from "../icons/MinusIcon";
+import TrashIcon from "../icons/TrashIcon";
+import PlusIcon from "../icons/PlusIcon";
+import CartLoader from "../components/ui/CartLoader";
 
 const CartPage: React.FC = () => {
-  const { cart, updateQuantity, removeFromCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, isLoaded } = useCart();
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -19,6 +20,14 @@ const CartPage: React.FC = () => {
   const shipping = subtotal > 0 ? 5.0 : 0;
   const tax = subtotal > 0 ? subtotal * 0.08 : 0;
   const total = subtotal + shipping + tax;
+
+  if (!isLoaded) {
+    return (
+      <div className="pt-24 min-h-screen flex items-center justify-center">
+        <CartLoader />
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -100,7 +109,7 @@ const CartPage: React.FC = () => {
                               onClick={() =>
                                 updateQuantity(product.id, product.quantity - 1)
                               }
-                              className="p-2 text-gray-500 hover:text-gray-700"
+                              className="p-2 text-gray-500 hover:text-gray-700 cursor-pointer"
                             >
                               <span className="sr-only">Decrease quantity</span>
                               <MinusIcon />
@@ -113,7 +122,7 @@ const CartPage: React.FC = () => {
                               onClick={() =>
                                 updateQuantity(product.id, product.quantity + 1)
                               }
-                              className="p-2 text-gray-500 hover:text-gray-700"
+                              className="p-2 text-gray-500 hover:text-gray-700 cursor-pointer"
                             >
                               <span className="sr-only">Increase quantity</span>
                               <PlusIcon />
@@ -128,7 +137,7 @@ const CartPage: React.FC = () => {
                             >
                               <span className="sr-only">Remove</span>
                               <TrashIcon
-                                className="h-5 w-5"
+                                className="h-5 w-5  cursor-pointer"
                                 aria-hidden="true"
                               />
                             </button>

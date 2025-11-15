@@ -1,12 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext";
-import Input from "@/app/components/ui/Input";
-import Button from "@/app/components/ui/Button";
+
+import Input from "@/app/(public)/components/ui/Input";
+import Button from "@/app/(public)/components/ui/Button";
 import MailIcon from "@/app/icons/MailIcon";
 import LockIcon from "@/app/icons/LockIcon";
 import AuthLayout from "@/app/layout/AuthLayout";
+import { useAuth } from "@/app/context/AuthContext";
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ const AdminLoginPage: React.FC = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    
+
     if (!email || !password) {
       setError("Please fill in all fields.");
       setLoading(false);
@@ -93,4 +94,3 @@ const AdminLoginPage: React.FC = () => {
 };
 
 export default AdminLoginPage;
-

@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+
+import Toast from "../components/ui/Toast";
+import Link from "next/link";
 import { CustomizableProduct, Design, Patch } from "../data/types";
 import { CUSTOMIZABLE_PRODUCTS } from "../data/constants";
 import ArrowRightIcon from "../icons/ArrowRightIcon";
-import DesignCanvas from "../design/DesignCanvas";
 import ControlPanel from "../design/ControlPanel";
+import DesignCanvas from "../design/DesignCanvas";
 import HowItWorks from "../design/HowItWorks";
-import Toast from "../components/ui/Toast";
-import Link from "next/link";
 
 const CreatePage: React.FC = () => {
   const [product, setProduct] = useState<CustomizableProduct>(

@@ -1,4 +1,6 @@
 import React from "react";
+
+import Link from "next/link";
 import { FAQ_TOPICS } from "../data/constants";
 import QuestionMarkCircleIcon from "../icons/QuestionMarkCircleIcon";
 import FaqAccordion from "../components/faqPageComp/FaqAccordion";
@@ -7,7 +9,6 @@ import TruckIcon from "../icons/TruckIcon";
 import ShirtIcon from "../icons/ShirtIcon";
 import RefreshIcon from "../icons/RefreshIcon";
 import SparklesIcon from "../icons/SparklesIcon";
-import Link from "next/link";
 
 const categoryIcons: {
   [key: string]: React.FC<React.SVGProps<SVGSVGElement>>;

@@ -1,7 +1,9 @@
 "use client";
-import Button from "@/app/components/ui/Button";
-import Input from "@/app/components/ui/Input";
+import Button from "@/app/(public)/components/ui/Button";
+import Input from "@/app/(public)/components/ui/Input";
 import { useAuth } from "@/app/context/AuthContext";
+
+
 import GoogleIcon from "@/app/icons/GoogleIcon";
 import LockIcon from "@/app/icons/LockIcon";
 import MailIcon from "@/app/icons/MailIcon";

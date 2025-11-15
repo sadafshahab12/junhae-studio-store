@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import Image from "next/image";
 import React, { useState, useMemo } from "react";
-import ArrowRightIcon from "../icons/ArrowRightIcon";
-import SearchIcon from "../icons/SearchIcon";
-import { BLOG_CATEGORIES, BLOG_POSTS } from "../data/constants";
+import ArrowRightIcon from "../../icons/ArrowRightIcon";
+import SearchIcon from "../../icons/SearchIcon";
+import { BLOG_CATEGORIES, BLOG_POSTS } from "../../data/constants";
 import ArticleCard from "../components/blogPageComp/ArticleCard";
 import Newsletter from "../components/homePageComp/Newsletter";
 import Link from "next/link";

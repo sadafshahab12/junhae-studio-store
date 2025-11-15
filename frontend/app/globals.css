@@ -24,3 +24,111 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
+/* Cart Loader Animation */
+.cart-loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  filter: drop-shadow(0 5px 15px rgba(100, 100, 100, 0.1));
+}
+
+.cart-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  color: #374151; /* gray-700 */
+  animation: cart-bob 1.6s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.wheel {
+  position: absolute;
+  bottom: 22px; /* Adjusted for this specific SVG */
+  width: 10px;
+  height: 10px;
+  background-color: #374151;
+  border-radius: 50%;
+  animation: wheel-spin 1.2s linear infinite;
+}
+
+.wheel-1 {
+  left: 20px; /* Adjusted */
+}
+
+.wheel-2 {
+  right: 8px; /* Adjusted */
+  animation-delay: -0.1s;
+}
+
+.cart-loader::after {
+  content: "";
+  position: absolute;
+  bottom: 10px; /* Adjusted */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 6px;
+  background-color: rgba(55, 65, 81, 0.1);
+  border-radius: 50%;
+  animation: shadow-pulse 1.6s ease-in-out infinite;
+  filter: blur(1px);
+}
+
+@keyframes cart-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wheel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg); /* spin backwards to move 'forward' */
+  }
+}
+
+@keyframes shadow-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0.7;
+  }
+}

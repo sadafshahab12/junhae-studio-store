@@ -1,13 +1,9 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function ProtectedContent({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
   const router = useRouter();
 
@@ -36,3 +32,15 @@ export default function DashboardLayout({
   return <>{children}</>;
 }
 
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // AuthProvider is now top-level of the layout
+  return (
+    <AuthProvider>
+      <ProtectedContent>{children}</ProtectedContent>
+    </AuthProvider>
+  );
+}

@@ -1,9 +1,10 @@
 import Image from "next/image";
 import React from "react";
-import ArrowRightIcon from "../icons/ArrowRightIcon";
 import HeartIcon from "../icons/HeartIcon";
 import LeafIcon from "../icons/LeafIcon";
 import SparklesIcon from "../icons/SparklesIcon";
+import ArrowRightIcon from "../icons/ArrowRightIcon";
+
 
 const OurStoryPage: React.FC = () => {
   const philosophyItems = [
