@@ -6,8 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { OrderProvider } from "./context/OrderContext";
 import { ProductProvider } from "./context/ProductContext";
-import Header from "./components/homePageComp/Header";
-import Footer from "./components/homePageComp/Footer";
+import LayoutWrapper from "./components/LayoutWrapper";
 
 const outfit = Outfit({
   weight: ["400", "700"],
@@ -23,9 +22,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={`${outfit.className} ${outfit.style} antialiased`}>
@@ -33,9 +32,7 @@ export default function RootLayout({
           <CartProvider>
             <OrderProvider>
               <ProductProvider>
-                <Header />
-                {children}
-                <Footer />
+                <LayoutWrapper>{children}</LayoutWrapper>
               </ProductProvider>
             </OrderProvider>
           </CartProvider>

@@ -1,13 +1,23 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Order } from "@/app/data/types";
 
 interface OrderContextType {
   orders: Order[];
-  addOrder: (order: Order) => void;
-  updateOrderStatus: (orderId: string, status: Order["status"]) => void;
+  addOrder: (formData: FormData) => Promise<Order | null>;
+  updateOrderStatus: (
+    orderId: string,
+    status: Order["status"]
+  ) => Promise<void>;
   getOrdersByCustomer: (email: string) => Order[];
   getTotalSales: () => number;
+  loading: boolean;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -18,68 +28,112 @@ interface OrderProviderProps {
 
 export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load orders from localStorage on mount
+  // 🟦 Fetch all orders from backend on mount
   useEffect(() => {
-    try {
-      const storedOrders = localStorage.getItem("junhaeOrders");
-      if (storedOrders) {
-        setOrders(JSON.parse(storedOrders));
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/orders`
+        );
+        const data = await res.json();
+        setOrders(data.orders || []);
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load orders from localStorage", error);
-      localStorage.removeItem("junhaeOrders");
-    } finally {
-      setIsLoaded(true);
-    }
+    };
+
+    fetchOrders();
   }, []);
 
-  // Save orders to localStorage whenever they change
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("junhaeOrders", JSON.stringify(orders));
+  // 🟩 Create new order (supports file upload)
+  const addOrder = async (formData: FormData): Promise<Order | null> => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/orders`,
+        {
+          method: "POST",
+          body: formData, // multipart/form-data automatically handled
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Order creation error:", data);
+        return null;
+      }
+
+      setOrders((prev) => [data.order, ...prev]);
+      return data.order;
+    } catch (err) {
+      console.error("Failed to add order", err);
+      return null;
     }
-  }, [orders, isLoaded]);
-
-  const addOrder = (order: Order) => {
-    setOrders((prevOrders) => [order, ...prevOrders]);
   };
 
-  const updateOrderStatus = (orderId: string, status: Order["status"]) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId ? { ...order, status } : order
-      )
-    );
+  // 🟨 Update order status
+  const updateOrderStatus = async (
+    orderId: string,
+    status: Order["status"]
+  ): Promise<void> => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/orders/${orderId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === orderId ? { ...order, status } : order
+        )
+      );
+    } catch (err) {
+      console.error("Status update failed", err);
+    }
   };
 
+  // 🟧 Filter by customer email
   const getOrdersByCustomer = (email: string) => {
-    return orders.filter((order) => order.customerEmail === email);
+    return orders.filter((o) => o.customerEmail === email);
   };
 
+  // 🟥 Sum sales (excluding cancelled orders)
   const getTotalSales = () => {
     return orders
-      .filter((order) => order.status !== "Cancelled")
-      .reduce((sum, order) => sum + order.total, 0);
+      .filter((o) => o.status !== "Cancelled")
+      .reduce((sum, o) => sum + o.total, 0);
   };
 
-  const value = {
-    orders,
-    addOrder,
-    updateOrderStatus,
-    getOrdersByCustomer,
-    getTotalSales,
-  };
-
-  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
+  return (
+    <OrderContext.Provider
+      value={{
+        orders,
+        addOrder,
+        updateOrderStatus,
+        getOrdersByCustomer,
+        getTotalSales,
+        loading,
+      }}
+    >
+      {children}
+    </OrderContext.Provider>
+  );
 };
 
 export const useOrder = () => {
   const context = useContext(OrderContext);
-  if (context === undefined) {
-    throw new Error("useOrder must be used within an OrderProvider");
+  if (!context) {
+    throw new Error("useOrder must be used inside OrderProvider");
   }
   return context;
 };
-

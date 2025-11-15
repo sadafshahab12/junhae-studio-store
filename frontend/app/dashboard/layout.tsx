@@ -1,7 +1,10 @@
 "use client";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import Sidebar from "../components/adminPageComp/Sidebar";
+import AdminHeader from "../components/adminPageComp/AdminHeader";
 
 function ProtectedContent({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
@@ -32,15 +35,31 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // AuthProvider is now top-level of the layout
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <AuthProvider>
-      <ProtectedContent>{children}</ProtectedContent>
+      <ProtectedContent>
+        <div className="flex min-h-screen">
+          {/* Sidebar */}
+          <Sidebar
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
+
+          {/* Main content */}
+          <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
+            <AdminHeader
+              isSidebarOpen={isSidebarOpen}
+              setIsSidebarOpen={setIsSidebarOpen}
+            />
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
+              {children}
+            </main>
+          </div>
+        </div>
+      </ProtectedContent>
     </AuthProvider>
   );
 }

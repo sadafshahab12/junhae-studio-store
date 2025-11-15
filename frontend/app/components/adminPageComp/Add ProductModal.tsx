@@ -1,12 +1,8 @@
-"use client";
+"use client"
 import { Product } from "@/app/data/types";
-import { useProduct } from "@/app/context/ProductContext";
-import EditIcon from "@/app/icons/EditIcon";
-import MoreVerticalIcon from "@/app/icons/MoreVerticalIcon";
-import TrashIcon from "@/app/icons/TrashIcon";
+import UploadCloudIcon from "@/app/icons/UploadCloudIcon";
 import Image from "next/image";
-import React, { useState, useRef, useEffect } from "react";
-
+import { useEffect, useRef, useState } from "react";
 interface ProductFormData {
   name: string;
   slug: string;
@@ -42,7 +38,7 @@ const getInitialFormData = (product?: Product): ProductFormData => ({
   colors: product?.colors || [],
 });
 
-const AddProductModal: React.FC<{
+export const AddProductModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   product?: Product;
@@ -61,7 +57,12 @@ const AddProductModal: React.FC<{
     chest: "",
     length: "",
   });
-  const [newGalleryImage, setNewGalleryImage] = useState("");
+  const [newGalleryImage, setNewGalleryImage] = useState(""); // Kept for logic
+
+  // Ref for the hidden file input
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
+  // Ref for the main image file input
+  const mainImageFileInputRef = useRef<HTMLInputElement>(null);
 
   // Keep this useEffect only for resetting auxiliary inputs on mount/remount
   useEffect(() => {
@@ -157,13 +158,48 @@ const AddProductModal: React.FC<{
     });
   };
 
-  const addGalleryImage = () => {
-    if (newGalleryImage.trim()) {
-      setFormData({
-        ...formData,
-        galleryImages: [...formData.galleryImages, newGalleryImage.trim()],
+  const addGalleryImage = (imageUrl: string) => {
+    if (imageUrl.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: [...prev.galleryImages, imageUrl.trim()],
+      }));
+    }
+  };
+
+  const handleGalleryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Mock the URL for each file selected.
+      Array.from(files).forEach((file) => {
+        const mockUrl = `https://mock-storage.com/gallery/${file.name.replace(
+          /\s/g,
+          "_"
+        )}`;
+        addGalleryImage(mockUrl);
       });
-      setNewGalleryImage("");
+
+      // Clear the file input's value
+      e.target.value = "";
+    }
+  };
+
+  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Mock the URL for the main image
+      const mockUrl = `https://mock-storage.com/main/${file.name.replace(
+        /\s/g,
+        "_"
+      )}`;
+
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: mockUrl,
+      }));
+
+      // Clear the file input's value
+      e.target.value = "";
     }
   };
 
@@ -335,42 +371,96 @@ const AddProductModal: React.FC<{
             />
           </div>
 
-          {/* Main Image */}
+          {/* Main Image - REPLACED with File Upload UI */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Main Image URL *
+              Main Image *
             </label>
-            <input
-              type="url"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              required
-            />
+            <div className="flex flex-col gap-2 mb-2">
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={mainImageFileInputRef}
+                onChange={handleMainImageUpload}
+                accept="image/*"
+                className="hidden"
+                required={!formData.imageUrl} // Require file/URL unless one is already set (on edit)
+              />
+
+              {/* Image Preview or Upload Button */}
+              {formData.imageUrl ? (
+                <div className="flex items-center gap-4 p-3 border border-gray-300 rounded-md dark:border-gray-600">
+                  <Image
+                    src={formData.imageUrl}
+                    alt="Main Product Preview"
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      Current Image: {formData.imageUrl.substring(0, 50)}...
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => mainImageFileInputRef.current?.click()}
+                      className="mt-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      Change Image
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => mainImageFileInputRef.current?.click()}
+                  className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:border-gray-600"
+                >
+                  <UploadCloudIcon className="w-8 h-8 text-gray-400" />
+                  <span className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Click to upload main image *
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    PNG, JPG
+                  </span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Gallery Images */}
+          {/* Gallery Images - File Upload UI */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Gallery Images
             </label>
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-4">
+              {/* Hidden File Input */}
               <input
-                type="url"
-                value={newGalleryImage}
-                onChange={(e) => setNewGalleryImage(e.target.value)}
-                placeholder="Image URL"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                type="file"
+                ref={galleryFileInputRef}
+                onChange={handleGalleryImageUpload}
+                multiple // Allows multiple file selection
+                accept="image/*"
+                className="hidden"
               />
+
+              {/* File Upload Button UI */}
               <button
-                type="button"
-                onClick={addGalleryImage}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+                type="button" // 👈 Use type="button" to prevent form submission
+                onClick={() => galleryFileInputRef.current?.click()} // 👈 Trigger click on hidden input
+                className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:border-gray-600"
               >
-                Add
+                <UploadCloudIcon className="w-8 h-8 text-gray-400" />
+                <span className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Click to upload gallery images
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  PNG, JPG (Multiple files allowed)
+                </span>
               </button>
             </div>
+
+            {/* Displaying Current Gallery Images (Mock URLs) */}
             <div className="space-y-2">
               {formData.galleryImages.map((img, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -380,7 +470,7 @@ const AddProductModal: React.FC<{
                   <button
                     type="button"
                     onClick={() => removeGalleryImage(idx)}
-                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
                   >
                     Remove
                   </button>
@@ -408,7 +498,7 @@ const AddProductModal: React.FC<{
               <button
                 type="button"
                 onClick={addDetail}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
               >
                 Add
               </button>
@@ -425,7 +515,7 @@ const AddProductModal: React.FC<{
                   <button
                     type="button"
                     onClick={() => removeDetail(idx)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                   >
                     ×
                   </button>
@@ -453,7 +543,7 @@ const AddProductModal: React.FC<{
               <button
                 type="button"
                 onClick={addColor}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
               >
                 Add
               </button>
@@ -468,7 +558,7 @@ const AddProductModal: React.FC<{
                   <button
                     type="button"
                     onClick={() => removeColor(idx)}
-                    className="ml-2 text-red-600 hover:text-red-800"
+                    className="ml-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                   >
                     ×
                   </button>
@@ -513,7 +603,7 @@ const AddProductModal: React.FC<{
               <button
                 type="button"
                 onClick={addSizeGuide}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
               >
                 Add
               </button>
@@ -530,7 +620,7 @@ const AddProductModal: React.FC<{
                   <button
                     type="button"
                     onClick={() => removeSizeGuide(idx)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                   >
                     ×
                   </button>
@@ -559,225 +649,3 @@ const AddProductModal: React.FC<{
     </div>
   );
 };
-
-const ProductsAdmin: React.FC = () => {
-  // Destructure context functions
-  const { products, addProduct, updateProduct, deleteProduct } = useProduct();
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | undefined>(
-    undefined
-  );
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Adjusted condition to correctly check if the click is outside the dropdown menu
-      const buttonElement = document.querySelector(
-        `[data-product-id="${openMenuId}"]`
-      );
-      if (
-        openMenuId &&
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        (!buttonElement || !buttonElement.contains(event.target as Node))
-      ) {
-        setOpenMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openMenuId]);
-
-  const toggleMenu = (id: string) => {
-    setOpenMenuId(openMenuId === id ? null : id);
-  };
-
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setIsModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const handleDelete = async (id: string) => {
-    // ID should be string per context
-    if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        await deleteProduct(id); // Use context deleteProduct
-        alert("✅ Product deleted successfully!");
-      } catch (error) {
-        console.error("Delete failed:", error);
-        alert("Something went wrong while deleting the product.");
-      }
-    }
-    setOpenMenuId(null);
-  };
-
-  // ✅ Use context functions for saving/updating
-  const handleSave = async (productData: Product) => {
-    const isUpdating = productData.id !== undefined && productData.id !== null;
-
-    try {
-      if (isUpdating) {
-        // ID should be string as per ProductContextType
-        await updateProduct(productData.id as string, productData);
-        alert("✅ Product updated successfully!");
-      } else {
-        // Strip out the client-side generated 'id' before passing to addProduct,
-        // although the ProductContext addProduct implementation should handle it
-        // by only using the product properties for the POST body.
-        await addProduct(productData);
-        alert("✅ Product added successfully!");
-      }
-    } catch (error) {
-      console.error(
-        `Failed to ${isUpdating ? "update" : "add"} product:`,
-        error
-      );
-      alert("Something went wrong while saving the product.");
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingProduct(undefined);
-  };
-
-  const getStockStatus = (stock: number) => {
-    if (stock > 50)
-      return (
-        <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
-          In Stock
-        </span>
-      );
-    if (stock > 0)
-      return (
-        <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
-          Low Stock
-        </span>
-      );
-    return (
-      <span className="px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-300">
-        Out of Stock
-      </span>
-    );
-  };
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          Products ({products.length})
-        </h2>
-        <button
-          onClick={() => {
-            setEditingProduct(undefined);
-            setIsModalOpen(true);
-          }}
-          className="px-4 py-2 text-sm font-semibold text-white bg-gray-800 rounded-lg hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 transition"
-        >
-          Add New Product
-        </button>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-              <th scope="col" className="px-6 py-3">
-                Product Name
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Category
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Price
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Stock
-              </th>
-              <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, index) => (
-              <tr
-                key={index}
-                className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-              >
-                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                  <div className="flex items-center">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-10 h-10 rounded-md object-cover mr-4"
-                      width={1000}
-                      height={1000}
-                    />
-                    {product.name}
-                  </div>
-                </td>
-                <td className="px-6 py-4">{product.category}</td>
-                <td className="px-6 py-4">
-                  ${(product.price ?? 0).toFixed(2)}
-                </td>
-                <td className="px-6 py-4">
-                  {getStockStatus(product.stock || 0)}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="relative inline-block text-left">
-                    <button
-                      data-product-id={product.id} // Added data attribute for click outside logic
-                      onClick={() =>
-                        product.id && toggleMenu(String(product.id))
-                      }
-                      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <MoreVerticalIcon className="w-5 h-5" />
-                    </button>
-                    {openMenuId === product.id && (
-                      <div
-                        className="absolute right-0 mt-2 w-40 origin-top-right bg-white dark:bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10"
-                        ref={menuRef}
-                      >
-                        <div className="py-1">
-                          <button
-                            onClick={() => handleEdit(product)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <EditIcon className="w-4 h-4 mr-2" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(product.id as string)} // Cast to string for context
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <TrashIcon className="w-4 h-4 mr-2" /> Delete
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* ✅ FIX: Add a key to force React to remount the modal component whenever it opens 
-        or the product being edited changes. This ensures the component's internal 
-        useState is re-initialized correctly, fixing the cascading render bug.
-      */}
-      <AddProductModal
-        key={isModalOpen ? editingProduct?.id || "new-product" : "modal-closed"}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        product={editingProduct}
-        onSave={handleSave}
-      />
-    </div>
-  );
-};
-
-export default ProductsAdmin;

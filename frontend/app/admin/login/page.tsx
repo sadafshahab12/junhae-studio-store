@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import Input from "@/app/(public)/components/ui/Input";
-import Button from "@/app/(public)/components/ui/Button";
 import MailIcon from "@/app/icons/MailIcon";
 import LockIcon from "@/app/icons/LockIcon";
 import AuthLayout from "@/app/layout/AuthLayout";
 import { useAuth } from "@/app/context/AuthContext";
+import Input from "@/app/components/ui/Input";
+import Button from "@/app/components/ui/Button";
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -29,15 +29,20 @@ const AdminLoginPage: React.FC = () => {
     }
 
     try {
-      const user = await login(email);
+      // Pass both email and password
+      const user = await login(email, password);
+
       if (user.role === "admin") {
-        router.push("/dashboard");
+        // Wait a tick to make sure context is updated
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 50);
       } else {
         setError("Access denied. Admin credentials required.");
         setLoading(false);
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setError("Failed to log in. Please check your credentials.");
       setLoading(false);
     }

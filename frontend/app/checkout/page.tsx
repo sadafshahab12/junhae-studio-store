@@ -1,15 +1,25 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // 👈 Import useRef
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
-import { CartItem, Order } from "../data/types";
 import { useOrder } from "../context/OrderContext";
 import { useCart } from "../context/CartContext";
 import ShoppingBagIcon from "../icons/ShoppingBagIcon";
 import ChevronDownIcon from "../icons/ChevronDownIcon";
 import LockClosedIcon from "../icons/LockClosedIcon";
+import UploadCloudIcon from "../icons/UploadCloudIcon";
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+  size: string;
+  color: string;
+}
 
 interface OrderSummaryProps {
   cart: CartItem[];
@@ -102,76 +112,141 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   );
 };
 
+// Extracted BankDetails component to be a standalone functional component
+interface BankDetailsProps {
+  total: number;
+}
+const BankDetails: React.FC<BankDetailsProps> = ({ total }) => (
+  <div className="mt-4 p-4 bg-gray-50 border border-gray-300 rounded-md">
+    <h3 className="text-base font-semibold text-gray-900 mb-2">
+      Transfer Details
+    </h3>
+    <p className="text-sm text-gray-700">
+      Please transfer **${total.toFixed(2)}** to the following account and
+      upload the proof of payment. Your order will be processed upon
+      confirmation of the transfer.
+    </p>
+    <dl className="mt-3 space-y-1 text-sm">
+      <div className="flex justify-between py-1 border-t border-gray-200">
+        <dt className="font-medium text-gray-600">Bank Name:</dt>
+        <dd className="text-gray-900">Juno Bank</dd>
+      </div>
+      <div className="flex justify-between py-1 border-t border-gray-200">
+        <dt className="font-medium text-gray-600">Account Name:</dt>
+        <dd className="text-gray-900">Junhae Studio Inc.</dd>
+      </div>
+      <div className="flex justify-between py-1 border-t border-gray-200">
+        <dt className="font-medium text-gray-600">Account Number:</dt>
+        <dd className="text-gray-900">1234567890</dd>
+      </div>
+      <div className="flex justify-between py-1 border-t border-gray-200">
+        <dt className="font-medium text-gray-600">Routing Number:</dt>
+        <dd className="text-gray-900">098765432</dd>
+      </div>
+    </dl>
+  </div>
+);
+
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
   const { cart, clearCart, getCartTotal, isLoaded } = useCart();
   const { addOrder } = useOrder();
   const { currentUser } = useAuth();
+
+  // 👈 Create a ref for the hidden file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [shippingMethod, setShippingMethod] = useState<"standard" | "express">(
     "standard"
   );
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Credit Card");
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
+
   const [formData, setFormData] = useState({
     email: currentUser?.email || "",
     name: currentUser?.name || "",
     address: "",
     city: "",
     postalCode: "",
-    cardNumber: "",
-    nameOnCard: "",
-    expirationDate: "",
-    cvc: "",
+    country: "",
   });
 
   useEffect(() => {
     const timeout = requestAnimationFrame(() => setIsMounted(true));
     return () => cancelAnimationFrame(timeout);
   }, []);
+
   useEffect(() => {
-    if (!isLoaded) return; // wait for cart to load
-    if (cart.length === 0) {
-      router.push("/cart");
-    }
+    if (!isLoaded) return;
+    if (cart.length === 0) router.push("/cart");
   }, [cart, isLoaded, router]);
+
   const subtotal = getCartTotal();
   const shipping = shippingMethod === "express" ? 12.0 : 5.0;
   const tax = subtotal > 0 ? subtotal * 0.08 : 0;
   const total = subtotal + shipping + tax;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPaymentProof(e.target.files?.[0] || null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Create orders for each cart item
-    const orderDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    try {
+      const form = new FormData();
+      // ... (rest of form data appending remains the same)
+      form.append("customerName", formData.name);
+      form.append("customerEmail", formData.email);
+      form.append("address", formData.address);
+      form.append("city", formData.city);
+      form.append("postalCode", formData.postalCode);
+      form.append("country", formData.country || "Unknown");
+      form.append("shippingMethod", shippingMethod);
+      form.append("subtotal", subtotal.toString());
+      form.append("shipping", shipping.toString());
+      form.append("tax", tax.toString());
+      form.append("total", total.toString());
+      form.append("paymentMethod", paymentMethod);
 
-    cart.forEach((item) => {
-      const order: Order = {
-        id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        customerName: formData.name,
-        customerEmail: formData.email,
-        productName: `${item.name} (${item.size}, ${item.color})`,
-        quantity: item.quantity,
-        status: "Processing",
-        date: orderDate,
-        total:
-          item.price * item.quantity +
-          shipping +
-          item.price * item.quantity * 0.08,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          formData.name
-        )}&background=random`,
-      };
-      addOrder(order);
-    });
+      // Check for payment proof if Bank Transfer is selected
+      if (paymentMethod === "Bank Transfer" && !paymentProof) {
+        alert("Please upload payment proof for Bank Transfer.");
+        return;
+      }
+      if (paymentProof) form.append("paymentProof", paymentProof);
 
-    // Clear cart and redirect
-    clearCart();
-    router.push(`/order-success?total=${total.toFixed(2)}`);
+      // Add products as a JSON string
+      form.append(
+        "products",
+        JSON.stringify(
+          cart.map((item) => ({
+            name: item.name,
+            size: item.size,
+            color: item.color,
+            quantity: item.quantity,
+            price: item.price,
+          }))
+        )
+      );
+
+      // 🎯 Use the context's addOrder function
+      const newOrder = await addOrder(form);
+
+      if (!newOrder) {
+        alert("Failed to place order");
+        return;
+      }
+
+      clearCart();
+      // Use the newly created order's ID for navigation
+      router.push(`/order-success?orderId=${newOrder._id}`);
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      alert("Something went wrong.");
+    }
   };
 
   return (
@@ -180,8 +255,9 @@ const CheckoutPage: React.FC = () => {
         isMounted ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* MOBILE HEADER */}
+      {/* MOBILE HEADER ... (omitted for brevity) */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-20 lg:hidden">
+        {/* ... (omitted) */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link
@@ -209,7 +285,7 @@ const CheckoutPage: React.FC = () => {
           <div className="border-t border-gray-200 p-4 bg-stone-50">
             <OrderSummary
               cart={cart}
-              isMobile={true}
+              isMobile
               shipping={shipping}
               subtotal={subtotal}
               tax={tax}
@@ -222,7 +298,7 @@ const CheckoutPage: React.FC = () => {
       {/* MAIN */}
       <main className="mx-auto max-w-7xl px-4 pb-24 pt-50 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
-          {/* FORM SECTION */}
+          {/* FORM SECTION ... (omitted for brevity) */}
           <div className="lg:col-span-1">
             <div className="hidden lg:block text-center mb-12">
               <Link
@@ -233,7 +309,7 @@ const CheckoutPage: React.FC = () => {
               </Link>
             </div>
 
-            {/* Breadcrumb */}
+            {/* Breadcrumb ... (omitted) */}
             <nav aria-label="Progress">
               <ol
                 role="list"
@@ -290,10 +366,9 @@ const CheckoutPage: React.FC = () => {
                 </li>
               </ol>
             </nav>
-
             {/* FORM */}
             <form onSubmit={handleSubmit} className="mt-12 space-y-10">
-              {/* Contact */}
+              {/* Contact ... (omitted) */}
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Contact information
@@ -308,7 +383,6 @@ const CheckoutPage: React.FC = () => {
                   <input
                     type="email"
                     id="email-address"
-                    name="email-address"
                     autoComplete="email"
                     value={formData.email}
                     onChange={(e) =>
@@ -319,8 +393,7 @@ const CheckoutPage: React.FC = () => {
                   />
                 </div>
               </div>
-
-              {/* Shipping Info */}
+              {/* Shipping Info ... (omitted) */}
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Shipping information
@@ -335,7 +408,6 @@ const CheckoutPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="name"
                       id="name"
                       value={formData.name}
                       onChange={(e) =>
@@ -354,7 +426,6 @@ const CheckoutPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="address"
                       id="address"
                       autoComplete="street-address"
                       value={formData.address}
@@ -374,7 +445,6 @@ const CheckoutPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="city"
                       id="city"
                       value={formData.city}
                       onChange={(e) =>
@@ -393,7 +463,6 @@ const CheckoutPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="postal-code"
                       id="postal-code"
                       value={formData.postalCode}
                       onChange={(e) =>
@@ -405,8 +474,7 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Shipping Method */}
+              {/* Shipping Method ... (omitted) */}
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Shipping method
@@ -465,93 +533,73 @@ const CheckoutPage: React.FC = () => {
               <div>
                 <h2 className="text-lg font-medium text-gray-900">Payment</h2>
                 <div className="mt-4 p-4 border border-gray-200 rounded-lg">
-                  <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="card-number"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Card number
-                      </label>
-                      <input
-                        type="text"
-                        id="card-number"
-                        name="card-number"
-                        value={formData.cardNumber}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cardNumber: e.target.value,
-                          })
-                        }
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm p-3"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="name-on-card"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Name on card
-                      </label>
-                      <input
-                        type="text"
-                        id="name-on-card"
-                        name="name-on-card"
-                        value={formData.nameOnCard}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            nameOnCard: e.target.value,
-                          })
-                        }
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm p-3"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="expiration-date"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Expiration date (MM/YY)
-                      </label>
-                      <input
-                        type="text"
-                        name="expiration-date"
-                        id="expiration-date"
-                        value={formData.expirationDate}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            expirationDate: e.target.value,
-                          })
-                        }
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm p-3"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="cvc"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        CVC
-                      </label>
-                      <input
-                        type="text"
-                        name="cvc"
-                        id="cvc"
-                        value={formData.cvc}
-                        onChange={(e) =>
-                          setFormData({ ...formData, cvc: e.target.value })
-                        }
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm p-3"
-                      />
-                    </div>
-                  </div>
+                  <select
+                    className="w-full p-3 border rounded-md"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="PayPal">PayPal</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+
+                  {/* BANK TRANSFER DETAILS & UPLOAD FIELD (UPDATED UI) */}
+                  {paymentMethod === "Bank Transfer" && (
+                    <>
+                      <BankDetails total={total} />
+
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Upload Payment Proof (Required)
+                        </label>
+
+                        {/* 1. HIDDEN FILE INPUT */}
+                        <input
+                          type="file"
+                          ref={fileInputRef} // 👈 Reference the hidden input
+                          onChange={handleFileChange}
+                          accept=".png, .jpg, .jpeg, .pdf"
+                          required={paymentMethod === "Bank Transfer"}
+                          className="hidden" // 👈 Keep it hidden
+                        />
+
+                        {/* 2. STYLED BUTTON/DROPZONE */}
+                        {paymentProof ? (
+                          <div className="flex items-center justify-between p-3 border border-green-500 bg-green-50 rounded-md">
+                            <span className="text-sm text-green-700 truncate">
+                              ✅ File uploaded: **{paymentProof.name}**
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPaymentProof(null);
+                                if (fileInputRef.current)
+                                  fileInputRef.current.value = "";
+                              }}
+                              className="text-xs text-green-700 hover:text-green-900 ml-4 font-medium"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button" // 👈 Use type="button" to prevent form submission
+                            onClick={() => fileInputRef.current?.click()} // 👈 Trigger click on hidden input
+                            className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                          >
+                            <UploadCloudIcon className="w-8 h-8 text-gray-400" />
+                            <span className="mt-2 text-sm font-semibold text-gray-700">
+                              Click to upload proof
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              PNG, JPG, or PDF
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {/* END BANK TRANSFER DETAILS & UPLOAD FIELD */}
                 </div>
                 <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
                   <LockClosedIcon className="w-4 h-4" />
@@ -573,7 +621,7 @@ const CheckoutPage: React.FC = () => {
             </form>
           </div>
 
-          {/* SUMMARY SIDEBAR */}
+          {/* SUMMARY SIDEBAR ... (omitted) */}
           <aside className="lg:col-span-1 lg:sticky lg:top-16">
             <div className="py-12">
               <OrderSummary

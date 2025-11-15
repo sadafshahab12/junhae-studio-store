@@ -1,4 +1,5 @@
 "use client";
+
 import React, {
   createContext,
   useContext,
@@ -7,20 +8,15 @@ import React, {
   ReactNode,
 } from "react";
 import { Product } from "../data/types";
-// Assuming you have Product and other related types defined elsewhere
-// For completeness, I'll add a minimal definition for Product here.
-// NOTE: You should keep your original import paths if they are correct.
-// import { Product } from "@/app/data/types";
-
-// Minimal Product type definition for context completeness
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Product) => Promise<void>;
-  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
+  addProduct: (product: FormData) => Promise<void>;
+  updateProduct: (id: string, product: FormData) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   getProductById: (id: string) => Product | undefined;
   getProductBySlug: (slug: string) => Product | undefined;
+  refreshProducts: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -34,126 +30,110 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  void isLoading;
+  void isLoading; // prevent unused warning
 
-  // Load products from API on mount
+  // Fetch products from backend
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`
+      );
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      // Map MongoDB _id to frontend id
+      const mappedProducts = data.products.map((p: Product) => ({
+        ...p,
+        id: p._id,
+      }));
+      setProducts(mappedProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`
-        );
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        setProducts(data.products);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchProducts();
   }, []);
-  // console.log("Products",products)
-  const addProduct = async (product: Product) => {
+
+  const refreshProducts = async () => {
+    await fetchProducts();
+  };
+
+  // Add product
+  const addProduct = async (formData: FormData) => {
     try {
-      // FIX 1: Destructure out the client-side 'id'.
-      // The backend should generate the ID for POST requests, and sending
-      // an 'id' field often causes a 422 Unprocessable Entity error.
-      const { id, ...payload } = product;
-      void id;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // Send only the necessary product data (payload)
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
-
-      if (!res.ok) {
-        // Log the detailed server response for better debugging
-        const errorText = await res.text();
-        console.error("API Error Response Status:", res.status);
-        console.error("API Error Response Body:", errorText);
-        throw new Error(
-          "Failed to add product: check server logs for validation details."
-        );
-      }
-
-      const newProduct: Product = await res.json();
+      if (!res.ok) throw new Error("Failed to add product");
+      const data = await res.json();
+      const newProduct: Product = { ...data.product, id: data.product._id };
       setProducts((prev) => [newProduct, ...prev]);
     } catch (error) {
-      console.error(error);
-      // FIX 2: Re-throw the error so the calling function (handleSave) can catch it
-      // and provide user feedback (which fixes the second part of your error trace).
+      console.error("Error adding product:", error);
       throw error;
     }
   };
 
-  const updateProduct = async (
-    id: string,
-    updatedProduct: Partial<Product>
-  ) => {
+  // Update product
+  const updateProduct = async (id: string, formData: FormData) => {
     try {
-      // Find product slug to use in API
-      const productToUpdate = products.find((p) => p.id === id);
-      if (!productToUpdate) throw new Error("Product not found");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${productToUpdate.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedProduct),
+          body: formData,
         }
       );
       if (!res.ok) throw new Error("Failed to update product");
-      const updated: Product = await res.json();
-      setProducts((prev) =>
-        prev.map((product) => (product.id === id ? updated : product))
-      );
+      const data = await res.json();
+      const updated: Product = { ...data.product, id: data.product._id };
+      setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
     } catch (error) {
-      console.error(error);
+      console.error("Error updating product:", error);
       throw error;
     }
   };
 
+  // Delete product
   const deleteProduct = async (id: string) => {
     try {
-      const productToDelete = products.find((p) => p.id === id);
-      if (!productToDelete) throw new Error("Product not found");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${productToDelete.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${id}`,
         {
           method: "DELETE",
         }
       );
       if (!res.ok) throw new Error("Failed to delete product");
-      setProducts((prev) => prev.filter((product) => product.id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
-      console.error(error);
+      console.error("Error deleting product:", error);
       throw error;
     }
   };
 
-  const getProductById = (id: string) => {
-    return products.find((product) => product.id === id);
-  };
+  // Get product by ID
+  const getProductById = (id: string) => products.find((p) => p.id === id);
 
-  const getProductBySlug = (slug: string) => {
-    return products.find((product: Product) => product.slug === slug);
-  };
+  // Get product by slug
+  const getProductBySlug = (slug: string) =>
+    products.find((p) => p.slug === slug);
 
-  const value = {
+  const value: ProductContextType = {
     products,
     addProduct,
     updateProduct,
     deleteProduct,
     getProductById,
     getProductBySlug,
+    refreshProducts,
   };
 
   return (
@@ -163,8 +143,7 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
 
 export const useProduct = () => {
   const context = useContext(ProductContext);
-  if (context === undefined) {
+  if (!context)
     throw new Error("useProduct must be used within a ProductProvider");
-  }
   return context;
 };

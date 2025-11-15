@@ -5,52 +5,52 @@ import SettingsIcon from "@/app/icons/SettingsIcon";
 import ShoppingCartIcon from "@/app/icons/ShoppingCartIcon";
 import UsersIcon from "@/app/icons/UsersIcon";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 interface SidebarProps {
-  activePage: string;
-  setActivePage: (page: string) => void;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  activePage,
-  setActivePage,
   isSidebarOpen,
   setIsSidebarOpen,
 }) => {
+  const pathname = usePathname();
+
   const navItems = [
-    { name: "Overview", icon: LayoutGridIcon },
-    { name: "Products", icon: PackageIcon },
-    { name: "Orders", icon: ShoppingCartIcon },
-    { name: "Customers", icon: UsersIcon },
-    { name: "Settings", icon: SettingsIcon },
+    { name: "Overview", icon: LayoutGridIcon, link: "/dashboard" },
+    { name: "Products", icon: PackageIcon, link: "/dashboard/products" },
+    { name: "Orders", icon: ShoppingCartIcon, link: "/dashboard/orders" },
+    { name: "Customers", icon: UsersIcon, link: "/dashboard/customers" },
+    { name: "Settings", icon: SettingsIcon, link: "/dashboard/settings" },
   ];
 
   const NavLink: React.FC<{
     item: {
       name: string;
       icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+      link: string;
     };
-  }> = ({ item }) => (
-    <Link
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        setActivePage(item.name);
-        setIsSidebarOpen(false); // Close sidebar on mobile after click
-      }}
-      className={`flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 ${
-        activePage === item.name
-          ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900"
-          : "text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-      }`}
-    >
-      <item.icon className="w-5 h-5 mr-3" />
-      <span className="font-medium">{item.name}</span>
-    </Link>
-  );
+  }> = ({ item }) => {
+    const isActive = pathname === item.link;
+
+    return (
+      <Link
+        href={item.link}
+        onClick={() => setIsSidebarOpen(false)} // close sidebar on mobile
+        className={`flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+          isActive
+            ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900"
+            : "text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+        }`}
+      >
+        <item.icon className="w-5 h-5 mr-3" />
+        <span className="font-medium">{item.name}</span>
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -77,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
         <div className="px-4 py-6 border-t border-gray-200 dark:border-gray-700">
           <Link
-            href="#"
+            href="/logout" // optional logout page
             className="flex items-center px-4 py-2.5 rounded-lg text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
           >
             <LogOutIcon className="w-5 h-5 mr-3" />

@@ -5,6 +5,7 @@ import { productRouter } from "./routes/productRoutes.js";
 import { connectDb } from "./config/connectDb.js";
 import { reviewRouter } from "./routes/reviewRoutes.js";
 import { contactRouter } from "./routes/contactRoutes.js";
+import { orderRouter } from "./routes/orderRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 app.use(productRouter);
 app.use(reviewRouter);
 app.use(contactRouter);
+app.use(orderRouter);
 app.listen(port, () => {
   console.log(`Server is running on port http://localhost:${port}`);
 });

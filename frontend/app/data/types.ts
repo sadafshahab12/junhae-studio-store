@@ -41,16 +41,31 @@ export interface FaqTopic {
   questions: Faq[];
 }
 
+export interface OrderProduct {
+  name: string;
+  size: string;
+  color: string;
+  quantity: number;
+  price: number;
+}
+
 export interface Order {
-  id: string;
+  _id: string; // MongoDB ObjectId as string
   customerName: string;
   customerEmail: string;
-  productName: string;
-  quantity: number;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  products: OrderProduct[];
+  shippingMethod: "standard" | "express";
+  shippingDays?: number;
+  tax?: number;
+  total: number;
+  paymentMethod: string;
+  paymentProof?: string;
   status: "Processing" | "Shipped" | "Delivered" | "Cancelled";
   date: string;
-  total: number;
-  avatarUrl: string;
 }
 
 export interface Customer {
