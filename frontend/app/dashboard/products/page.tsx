@@ -7,24 +7,75 @@ import TrashIcon from "@/app/icons/TrashIcon";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 import { AddProductModal } from "@/app/components/adminPageComp/Add ProductModal";
+import Toast from "@/app/components/ui/Toast";
 
+interface ProductFormData extends Partial<Product> {
+  mainImageFile?: File;
+  galleryFiles?: File[];
+}
 
+const toFormData = (product: ProductFormData) => {
+  const formData = new FormData();
 
+  // Append all fields from the product form
+  Object.keys(product).forEach((key) => {
+    const value = product[key as keyof ProductFormData];
+    if (key === "mainImageFile" || key === "galleryFiles") return; // Handled separately
 
+    if (value !== undefined && value !== null) {
+      if (Array.isArray(value)) {
+        value.forEach((item) => formData.append(key, item));
+      } else if (typeof value === "object") {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, String(value));
+      }
+    }
+  });
+
+  // Append files
+  if (product.mainImageFile) {
+    formData.append("imageFile", product.mainImageFile);
+  }
+  if (product.galleryFiles) {
+    product.galleryFiles.forEach((file) =>
+      formData.append("galleryFiles", file)
+    );
+  }
+
+  return formData;
+};
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
 
 const ProductPage: React.FC = () => {
-  // Destructure context functions
-  const { products, addProduct, updateProduct, deleteProduct } = useProduct();
+  const {
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    isDeleting,
+    error,
+    clearError,
+  } = useProduct();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(
     undefined
   );
+  const [toast, setToast] = useState<{ message: string; show: boolean }>({
+    message: "",
+    show: false,
+  });
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Adjusted condition to correctly check if the click is outside the dropdown menu
       const buttonElement = document.querySelector(
         `[data-product-id="${openMenuId}"]`
       );
@@ -41,6 +92,13 @@ const ProductPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openMenuId]);
 
+  useEffect(() => {
+    if (error) {
+      setToast({ message: error, show: true });
+      clearError();
+    }
+  }, [error, clearError]);
+
   const toggleMenu = (id: string) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
@@ -52,41 +110,38 @@ const ProductPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    // ID should be string per context
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        await deleteProduct(id); // Use context deleteProduct
-        alert("✅ Product deleted successfully!");
-      } catch (error) {
-        console.error("Delete failed:", error);
-        alert("Something went wrong while deleting the product.");
+        await deleteProduct(id);
+        setToast({ message: "✅ Product deleted successfully!", show: true });
+      } catch (err: unknown) {
+        setToast({
+          message: getErrorMessage(err) || "Something went wrong while deleting.",
+          show: true,
+        });
       }
     }
     setOpenMenuId(null);
   };
 
-  // ✅ Use context functions for saving/updating
-  const handleSave = async (productData: Product) => {
-    const isUpdating = productData.id !== undefined && productData.id !== null;
-
+  const handleSave = async (productData: ProductFormData & { id?: string }) => {
     try {
+      const formData = toFormData(productData);
+      const isUpdating = !!productData.id;
+
       if (isUpdating) {
-        // ID should be string as per ProductContextType
-        await updateProduct(productData.id as string, productData);
-        alert("✅ Product updated successfully!");
+        await updateProduct(productData.id as string, formData);
+        setToast({ message: "✅ Product updated successfully!", show: true });
       } else {
-        // Strip out the client-side generated 'id' before passing to addProduct,
-        // although the ProductContext addProduct implementation should handle it
-        // by only using the product properties for the POST body.
-        await addProduct(productData);
-        alert("✅ Product added successfully!");
+        await addProduct(formData);
+        setToast({ message: "✅ Product added successfully!", show: true });
       }
-    } catch (error) {
-      console.error(
-        `Failed to ${isUpdating ? "update" : "add"} product:`,
-        error
-      );
-      alert("Something went wrong while saving the product.");
+      handleCloseModal();
+    } catch (err: unknown) {
+      setToast({
+        message: getErrorMessage(err) || "Something went wrong while saving.",
+        show: true,
+      });
     }
   };
 
@@ -154,9 +209,9 @@ const ProductPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map((product, index) => (
+            {products.map((product) => (
               <tr
-                key={index}
+                key={product.id}
                 className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
@@ -165,8 +220,8 @@ const ProductPage: React.FC = () => {
                       src={product.imageUrl}
                       alt={product.name}
                       className="w-10 h-10 rounded-md object-cover mr-4"
-                      width={1000}
-                      height={1000}
+                      width={40}
+                      height={40}
                     />
                     {product.name}
                   </div>
@@ -181,11 +236,10 @@ const ProductPage: React.FC = () => {
                 <td className="px-6 py-4 text-right">
                   <div className="relative inline-block text-left">
                     <button
-                      data-product-id={product.id} // Added data attribute for click outside logic
-                      onClick={() =>
-                        product.id && toggleMenu(String(product.id))
-                      }
+                      data-product-id={product.id}
+                      onClick={() => toggleMenu(String(product.id))}
                       className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                      disabled={isDeleting}
                     >
                       <MoreVerticalIcon className="w-5 h-5" />
                     </button>
@@ -202,10 +256,17 @@ const ProductPage: React.FC = () => {
                             <EditIcon className="w-4 h-4 mr-2" /> Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id as string)} // Cast to string for context
+                            onClick={() => handleDelete(product.id as string)}
                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            disabled={isDeleting}
                           >
-                            <TrashIcon className="w-4 h-4 mr-2" /> Delete
+                            {isDeleting ? (
+                              "Deleting..."
+                            ) : (
+                              <>
+                                <TrashIcon className="w-4 h-4 mr-2" /> Delete
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -217,16 +278,17 @@ const ProductPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-      {/* ✅ FIX: Add a key to force React to remount the modal component whenever it opens 
-        or the product being edited changes. This ensures the component's internal 
-        useState is re-initialized correctly, fixing the cascading render bug.
-      */}
       <AddProductModal
         key={isModalOpen ? editingProduct?.id || "new-product" : "modal-closed"}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         product={editingProduct}
         onSave={handleSave}
+      />
+      <Toast
+        message={toast.message}
+        show={toast.show}
+        onClose={() => setToast({ message: "", show: false })}
       />
     </div>
   );

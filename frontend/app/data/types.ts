@@ -4,6 +4,7 @@ export interface Collection {
   imageUrl: string;
 }
 export interface Product {
+  id: string;
   _id?: string;
   id: string;
   slug: string;
